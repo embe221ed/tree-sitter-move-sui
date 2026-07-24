@@ -1,0 +1,311 @@
+================================================================================
+hover: qualified function signature
+================================================================================
+public fun sui::coin::split<T>(self: &mut sui::coin::Coin<T>, split_amount: u64): sui::coin::Coin<T>
+--------------------------------------------------------------------------------
+
+(source_file
+  (hover_function
+    (modifier)
+    (module_identifier)
+    (module_identifier)
+    (function_identifier)
+    (type_parameters
+      (type_parameter
+        (type_parameter_identifier)))
+    (function_parameters
+      (function_parameter
+        (variable_identifier)
+        (ref_type
+          (mut_ref)
+          (apply_type
+            (module_access
+              (module_identifier)
+              (module_identifier)
+              (identifier)
+              (type_arguments
+                (apply_type
+                  (module_access
+                    (identifier))))))))
+      (function_parameter
+        (variable_identifier)
+        (primitive_type)))
+    (ret_type
+      (apply_type
+        (module_access
+          (module_identifier)
+          (module_identifier)
+          (identifier)
+          (type_arguments
+            (apply_type
+              (module_access
+                (identifier)))))))))
+
+================================================================================
+hover: macro function signature
+================================================================================
+macro fun std::vector::do<$T, $R>($v: vector<$T>, $f: |$T| -> $R)
+--------------------------------------------------------------------------------
+
+(source_file
+  (hover_function
+    (module_identifier)
+    (module_identifier)
+    (function_identifier)
+    (type_parameters
+      (type_parameter
+        (type_parameter_identifier))
+      (type_parameter
+        (type_parameter_identifier)))
+    (function_parameters
+      (function_parameter
+        (variable_identifier)
+        (apply_type
+          (module_access
+            (identifier)
+            (type_arguments
+              (apply_type
+                (module_access
+                  (identifier)))))))
+      (function_parameter
+        (variable_identifier)
+        (function_type
+          (function_type_parameters
+            (apply_type
+              (module_access
+                (identifier))))
+          (apply_type
+            (module_access
+              (identifier))))))))
+
+================================================================================
+hover: struct with abilities and fields
+================================================================================
+public struct sui::coin::Coin<phantom T> has key, store { id: sui::object::UID, balance: sui::balance::Balance<T> }
+--------------------------------------------------------------------------------
+
+(source_file
+  (hover_struct
+    (modifier)
+    (module_identifier)
+    (module_identifier)
+    (struct_identifier)
+    (type_parameters
+      (type_parameter
+        (type_parameter_identifier)))
+    (ability_decls
+      (ability)
+      (ability))
+    (datatype_fields
+      (named_fields
+        (field_annotation
+          (field_identifier)
+          (apply_type
+            (module_access
+              (module_identifier)
+              (module_identifier)
+              (identifier))))
+        (field_annotation
+          (field_identifier)
+          (apply_type
+            (module_access
+              (module_identifier)
+              (module_identifier)
+              (identifier)
+              (type_arguments
+                (apply_type
+                  (module_access
+                    (identifier)))))))))))
+
+================================================================================
+hover: struct with positional field names
+================================================================================
+public struct a::m::Pair { 0: u64, 1: bool }
+--------------------------------------------------------------------------------
+
+(source_file
+  (hover_struct
+    (modifier)
+    (module_identifier)
+    (module_identifier)
+    (struct_identifier)
+    (datatype_fields
+      (named_fields
+        (field_annotation
+          (num_literal)
+          (primitive_type))
+        (field_annotation
+          (num_literal)
+          (primitive_type))))))
+
+================================================================================
+hover: enum with elided variant bodies
+================================================================================
+public enum std::option::Option<T> has copy, drop, store { None, Some( /* ... */ ), /* ... */ }
+--------------------------------------------------------------------------------
+
+(source_file
+  (hover_enum
+    (modifier)
+    (module_identifier)
+    (module_identifier)
+    (enum_identifier)
+    (type_parameters
+      (type_parameter
+        (type_parameter_identifier)))
+    (ability_decls
+      (ability)
+      (ability)
+      (ability))
+    (enum_variants
+      (variant
+        (variant_identifier))
+      (variant
+        (variant_identifier)
+        (datatype_fields
+          (positional_fields
+            (block_comment))))
+      (block_comment))))
+
+================================================================================
+hover: positional variant signature
+================================================================================
+std::option::Option::Some(u64)
+--------------------------------------------------------------------------------
+
+(source_file
+  (hover_variant
+    (module_identifier)
+    (module_identifier)
+    (module_identifier)
+    (variant_identifier)
+    (datatype_fields
+      (positional_fields
+        (primitive_type)))))
+
+================================================================================
+hover: named variant signature
+================================================================================
+a::m::Shape::Circle{ radius: u64 }
+--------------------------------------------------------------------------------
+
+(source_file
+  (hover_variant
+    (module_identifier)
+    (module_identifier)
+    (module_identifier)
+    (variant_identifier)
+    (datatype_fields
+      (named_fields
+        (field_annotation
+          (field_identifier)
+          (primitive_type))))))
+
+================================================================================
+hover: constant with value
+================================================================================
+const sui::coin::EInvalidArg: u64 = 1
+--------------------------------------------------------------------------------
+
+(source_file
+  (hover_const
+    (module_identifier)
+    (module_identifier)
+    (constant_identifier)
+    (primitive_type)
+    (num_literal)))
+
+================================================================================
+hover: constant with nested list value
+================================================================================
+const a::m::NESTED: vector<vector<u64>> = [[1, 2], [3]]
+--------------------------------------------------------------------------------
+
+(source_file
+  (hover_const
+    (module_identifier)
+    (module_identifier)
+    (constant_identifier)
+    (apply_type
+      (module_access
+        (identifier)
+        (type_arguments
+          (apply_type
+            (module_access
+              (identifier)
+              (type_arguments
+                (primitive_type)))))))
+    (literal_list
+      (literal_list
+        (num_literal)
+        (num_literal))
+      (literal_list
+        (num_literal)))))
+
+================================================================================
+hover: let binding
+================================================================================
+let mut balance: sui::balance::Balance<T>
+--------------------------------------------------------------------------------
+
+(source_file
+  (hover_local
+    (variable_identifier)
+    (apply_type
+      (module_access
+        (module_identifier)
+        (module_identifier)
+        (identifier)
+        (type_arguments
+          (apply_type
+            (module_access
+              (identifier))))))))
+
+================================================================================
+hover: positional field line
+================================================================================
+0: u64
+--------------------------------------------------------------------------------
+
+(source_file
+  (hover_local
+    (num_literal)
+    (primitive_type)))
+
+================================================================================
+hover: module line
+================================================================================
+module sui::coin
+--------------------------------------------------------------------------------
+
+(source_file
+  (hover_module
+    (module_identity
+      (module_identifier)
+      (module_identifier))))
+
+================================================================================
+hover: bare reference type
+================================================================================
+&mut sui::table::Table<address, sui::coin::Coin<T>>
+--------------------------------------------------------------------------------
+
+(source_file
+  (ref_type
+    (mut_ref)
+    (apply_type
+      (module_access
+        (module_identifier)
+        (module_identifier)
+        (identifier)
+        (type_arguments
+          (primitive_type)
+          (apply_type
+            (module_access
+              (module_identifier)
+              (module_identifier)
+              (identifier)
+              (type_arguments
+                (apply_type
+                  (module_access
+                    (identifier)))))))))))

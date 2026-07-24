@@ -1,0 +1,304 @@
+================================================================================
+nested generic call, fully qualified (three-part)
+================================================================================
+module t::m { fun f() { a::b::function<T1, T2<T3>>(); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (module_identifier)
+                  (module_identifier)
+                  (identifier)
+                  (type_arguments
+                    (apply_type
+                      (module_access
+                        (identifier)))
+                    (apply_type
+                      (module_access
+                        (identifier)
+                        (type_arguments
+                          (apply_type
+                            (module_access
+                              (identifier)))))))))
+              (arg_list))))))))
+
+================================================================================
+nested generic call, bare name
+================================================================================
+module t::m { fun f() { function<T1, T2<T3>>(); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)
+                  (type_arguments
+                    (apply_type
+                      (module_access
+                        (identifier)))
+                    (apply_type
+                      (module_access
+                        (identifier)
+                        (type_arguments
+                          (apply_type
+                            (module_access
+                              (identifier)))))))))
+              (arg_list))))))))
+
+================================================================================
+two-part generic call keeps module and member fields
+================================================================================
+module t::m { fun f() { let a = coin::zero<T>(); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (call_expression
+                (name_expression
+                  (module_access
+                    (module_identifier)
+                    (identifier)
+                    (type_arguments
+                      (apply_type
+                        (module_access
+                          (identifier))))))
+                (arg_list)))))))))
+
+================================================================================
+two-part generic call with nested arguments
+================================================================================
+module t::m { fun f() { table::borrow_mut<address, Table<address, u64>>(t, k); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (module_identifier)
+                  (identifier)
+                  (type_arguments
+                    (primitive_type)
+                    (apply_type
+                      (module_access
+                        (identifier)
+                        (type_arguments
+                          (primitive_type)
+                          (primitive_type)))))))
+              (arg_list
+                (name_expression
+                  (module_access
+                    (identifier)))
+                (name_expression
+                  (module_access
+                    (identifier)))))))))))
+
+================================================================================
+ambiguous angle resolves to generic call like the compiler
+================================================================================
+module t::m { fun f() { let o = a<b, c>(d); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (call_expression
+                (name_expression
+                  (module_access
+                    (identifier)
+                    (type_arguments
+                      (apply_type
+                        (module_access
+                          (identifier)))
+                      (apply_type
+                        (module_access
+                          (identifier))))))
+                (arg_list
+                  (name_expression
+                    (module_access
+                      (identifier))))))))))))
+
+================================================================================
+method call with nested generics
+================================================================================
+module t::m { fun f() { x.method<T1, T2<T3>>(); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (dot_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (call_expression
+                (name_expression
+                  (module_access
+                    (identifier)
+                    (type_arguments
+                      (apply_type
+                        (module_access
+                          (identifier)))
+                      (apply_type
+                        (module_access
+                          (identifier)
+                          (type_arguments
+                            (apply_type
+                              (module_access
+                                (identifier)))))))))
+                (arg_list)))))))))
+
+================================================================================
+macro call with nested generics
+================================================================================
+module t::m { fun f() { pair!<A<B>, C<D>>(1, 2); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (macro_call_expression
+              (macro_module_access
+                (module_access
+                  (identifier)))
+              (type_arguments
+                (apply_type
+                  (module_access
+                    (identifier)
+                    (type_arguments
+                      (apply_type
+                        (module_access
+                          (identifier))))))
+                (apply_type
+                  (module_access
+                    (identifier)
+                    (type_arguments
+                      (apply_type
+                        (module_access
+                          (identifier)))))))
+              (arg_list
+                (num_literal)
+                (num_literal)))))))))
+
+================================================================================
+deeply nested generic return type
+================================================================================
+module t::m { fun deep(): Wrapper<Inner<Deep<u8>>> { make<Wrapper<Inner<Deep<u8>>>>() } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (ret_type
+          (apply_type
+            (module_access
+              (identifier)
+              (type_arguments
+                (apply_type
+                  (module_access
+                    (identifier)
+                    (type_arguments
+                      (apply_type
+                        (module_access
+                          (identifier)
+                          (type_arguments
+                            (primitive_type)))))))))))
+        (block
+          (call_expression
+            (name_expression
+              (module_access
+                (identifier)
+                (type_arguments
+                  (apply_type
+                    (module_access
+                      (identifier)
+                      (type_arguments
+                        (apply_type
+                          (module_access
+                            (identifier)
+                            (type_arguments
+                              (apply_type
+                                (module_access
+                                  (identifier)
+                                  (type_arguments
+                                    (primitive_type)))))))))))))
+            (arg_list)))))))

@@ -1,0 +1,73 @@
+================================================================================
+doc comments expose their content (S3)
+================================================================================
+module t::m {
+    /// # Heading
+    /// body text
+    fun f() {}
+}
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (newline)
+      (line_comment
+        (doc_comment))
+      (newline)
+      (line_comment
+        (doc_comment))
+      (newline)
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block))
+      (newline))))
+
+================================================================================
+four slashes are a plain comment, two are too (S3)
+================================================================================
+module t::m {
+    //// not a doc comment
+    // plain
+    fun f() {}
+}
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (newline)
+      (line_comment)
+      (newline)
+      (line_comment)
+      (newline)
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block))
+      (newline))))
+
+================================================================================
+nested block comments parse as one comment
+================================================================================
+module t::m { /* a /* b */ c */ fun f() {} }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (block_comment)
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block)))))

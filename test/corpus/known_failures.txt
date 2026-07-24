@@ -1,0 +1,57 @@
+================================================================================
+P6: whitespace-separated angle brackets are comparisons, not type arguments
+:skip
+================================================================================
+module t::m { fun f(h: H, a: u64, b: u64, c: u64, d: u64) { h(a < b, c > (d)); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier))))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (arg_list
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (binary_operator)
+                  (name_expression
+                    (module_access
+                      (identifier))))
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (binary_operator)
+                  (expression_list
+                    (name_expression
+                      (module_access
+                        (identifier)))))))))))))

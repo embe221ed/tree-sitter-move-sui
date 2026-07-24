@@ -1,0 +1,59 @@
+================================================================================
+spec iff operator (G12)
+================================================================================
+module t::m { fun f(a: bool, b: bool) {} spec f { ensures a <==> b; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (primitive_type))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (block))
+      (spec_block
+        (identifier)
+        (spec_body
+          (spec_condition
+            (condition_kind)
+            (binary_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (binary_operator)
+              (name_expression
+                (module_access
+                  (identifier))))))))))
+
+================================================================================
+spec fun without return type (G12)
+================================================================================
+module t::m { spec fun helper(x: u64) { x } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (spec_block
+        (usual_spec_function
+          (function_identifier)
+          (function_parameters
+            (function_parameter
+              (variable_identifier)
+              (primitive_type)))
+          (block
+            (name_expression
+              (module_access
+                (identifier)))))))))

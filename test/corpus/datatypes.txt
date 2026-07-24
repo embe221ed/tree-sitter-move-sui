@@ -1,0 +1,127 @@
+================================================================================
+empty type parameter list on struct
+================================================================================
+module t::m { public struct C<>() }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (struct_definition
+        (struct_identifier)
+        (type_parameters)
+        (datatype_fields
+          (positional_fields))))))
+
+================================================================================
+positional struct declaration with trailing semicolon
+================================================================================
+module t::m { public struct P(u64); }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (struct_definition
+        (struct_identifier)
+        (datatype_fields
+          (positional_fields
+            (primitive_type)))))))
+
+================================================================================
+positional struct with postfix abilities
+================================================================================
+module t::m { public struct Q(u64) has copy, drop; }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (struct_definition
+        (struct_identifier)
+        (datatype_fields
+          (positional_fields
+            (primitive_type)))
+        (postfix_ability_decls
+          (ability)
+          (ability))))))
+
+================================================================================
+phantom macro-style type parameter
+================================================================================
+module t::m { public struct S<phantom $T>() }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (struct_definition
+        (struct_identifier)
+        (type_parameters
+          (type_parameter
+            (type_parameter_identifier)))
+        (datatype_fields
+          (positional_fields))))))
+
+================================================================================
+struct with named fields and abilities
+================================================================================
+module t::m { public struct Coin<phantom T> has key, store { id: UID, balance: Balance<T> } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (struct_definition
+        (struct_identifier)
+        (type_parameters
+          (type_parameter
+            (type_parameter_identifier)))
+        (ability_decls
+          (ability)
+          (ability))
+        (datatype_fields
+          (named_fields
+            (field_annotation
+              (field_identifier)
+              (apply_type
+                (module_access
+                  (identifier))))
+            (field_annotation
+              (field_identifier)
+              (apply_type
+                (module_access
+                  (identifier)
+                  (type_arguments
+                    (apply_type
+                      (module_access
+                        (identifier)))))))))))))
+
+================================================================================
+ability constraints reject trailing plus (G13)
+:error
+================================================================================
+module t::m { public struct S<T: copy +> { x: T } }
+--------------------------------------------------------------------------------
+
+================================================================================
+has requires at least one ability (G13)
+:error
+================================================================================
+module t::m { public struct S has { x: u64 } }
+--------------------------------------------------------------------------------

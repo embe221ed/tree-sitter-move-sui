@@ -1,0 +1,167 @@
+================================================================================
+lambda with typed tuple binder (G1)
+================================================================================
+module t::m { fun f() { foo!(|(a, b): (u64, u64)| a + b); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (macro_call_expression
+              (macro_module_access
+                (module_access
+                  (identifier)))
+              (arg_list
+                (lambda_expression
+                  (lambda_bindings
+                    (lambda_binding
+                      (comma_bind_list
+                        (bind_var
+                          (variable_identifier))
+                        (bind_var
+                          (variable_identifier)))
+                      (tuple_type
+                        (primitive_type)
+                        (primitive_type))))
+                  (binary_expression
+                    (name_expression
+                      (module_access
+                        (identifier)))
+                    (binary_operator)
+                    (name_expression
+                      (module_access
+                        (identifier)))))))))))))
+
+================================================================================
+lambda with typed single binder
+================================================================================
+module t::m { fun f() { foo!(|x: u64| -> u64 { x + 1 }); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (macro_call_expression
+              (macro_module_access
+                (module_access
+                  (identifier)))
+              (arg_list
+                (lambda_expression
+                  (lambda_bindings
+                    (lambda_binding
+                      (bind_var
+                        (variable_identifier))
+                      (primitive_type)))
+                  (primitive_type)
+                  (block
+                    (binary_expression
+                      (name_expression
+                        (module_access
+                          (identifier)))
+                      (binary_operator)
+                      (num_literal))))))))))))
+
+================================================================================
+lambda body extends over binary expression
+================================================================================
+module t::m { fun f() { let g = |y| y + 1; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (lambda_expression
+                (lambda_bindings
+                  (lambda_binding
+                    (bind_var
+                      (variable_identifier))))
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (binary_operator)
+                  (num_literal))))))))))
+
+================================================================================
+labeled loop with valued break
+================================================================================
+module t::m { fun f(): u64 { 'outer: loop { break 'outer 5 } } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (ret_type
+          (primitive_type))
+        (block
+          (identified_expression
+            (block_identifier
+              (label
+                (identifier)))
+            (loop_expression
+              (block
+                (break_expression
+                  (label
+                    (identifier))
+                  (num_literal))))))))))
+
+================================================================================
+labeled while with continue
+================================================================================
+module t::m { fun f() { 'a: while (true) { continue 'a } } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (identified_expression
+            (block_identifier
+              (label
+                (identifier)))
+            (while_expression
+              (bool_literal)
+              (block
+                (continue_expression
+                  (label
+                    (identifier)))))))))))

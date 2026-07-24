@@ -1,0 +1,367 @@
+================================================================================
+vector literal, untyped
+================================================================================
+module t::m { fun f() { let a = vector[1, 2]; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (vector_expression
+                (num_literal)
+                (num_literal)))))))))
+
+================================================================================
+vector literal, empty
+================================================================================
+module t::m { fun f() { let a = vector[]; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (vector_expression))))))))
+
+================================================================================
+vector literal, typed
+================================================================================
+module t::m { fun f() { let a = vector<u8>[1, 2]; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (vector_expression
+                (primitive_type)
+                (num_literal)
+                (num_literal)))))))))
+
+================================================================================
+vector literal, space before bracket
+================================================================================
+module t::m { fun f() { let a = vector [1, 2]; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (vector_expression
+                (num_literal)
+                (num_literal)))))))))
+
+================================================================================
+vector literal, typed with spaces
+================================================================================
+module t::m { fun f() { let a = vector <u8> [1]; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (vector_expression
+                (primitive_type)
+                (num_literal)))))))))
+
+================================================================================
+vector literal, nested
+================================================================================
+module t::m { fun f() { let a = vector[vector[1]]; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (vector_expression
+                (vector_expression
+                  (num_literal))))))))))
+
+================================================================================
+vector as module path stays an identifier
+================================================================================
+module t::m { fun f() { let a = vector::empty<u64>(); vector::push_back(&mut a, 1); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (call_expression
+                (name_expression
+                  (module_access
+                    (module_identifier)
+                    (identifier)
+                    (type_arguments
+                      (primitive_type))))
+                (arg_list))))
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (module_identifier)
+                  (identifier)))
+              (arg_list
+                (borrow_expression
+                  (mut_ref)
+                  (name_expression
+                    (module_access
+                      (identifier))))
+                (num_literal)))))))))
+
+================================================================================
+vector fully qualified module call
+================================================================================
+module t::m { fun f(v: vector<u64>): u64 { std::vector::length(&v) } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)
+                (type_arguments
+                  (primitive_type))))))
+        (ret_type
+          (primitive_type))
+        (block
+          (call_expression
+            (name_expression
+              (module_access
+                (module_identifier)
+                (module_identifier)
+                (identifier)))
+            (arg_list
+              (borrow_expression
+                (imm_ref)
+                (name_expression
+                  (module_access
+                    (identifier)))))))))))
+
+================================================================================
+vector literal with method call
+================================================================================
+module t::m { fun f(): u64 { vector[1, 2].length() } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (ret_type
+          (primitive_type))
+        (block
+          (dot_expression
+            (vector_expression
+              (num_literal)
+              (num_literal))
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (arg_list))))))))
+
+================================================================================
+vector literal with line comment between
+================================================================================
+module t::m { fun f() { let a = vector // c
+[1]; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (vector_expression
+                (line_comment)
+                (newline)
+                (num_literal)))))))))
+
+================================================================================
+vector literal with block comment between
+================================================================================
+module t::m { fun f() { let a = vector /* c */ [1]; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (vector_expression
+                (block_comment)
+                (num_literal)))))))))
+
+================================================================================
+vector literal with nested block comment between
+================================================================================
+module t::m { fun f() { let a = vector /* a /* b */ c */ [1]; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (vector_expression
+                (block_comment)
+                (num_literal)))))))))
+
+================================================================================
+field named vector is a field access, not a literal
+================================================================================
+module t::m { fun f(s: S): u8 { s.vector[0] } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (ret_type
+          (primitive_type))
+        (block
+          (index_expression
+            (dot_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (name_expression
+                (module_access
+                  (identifier))))
+            (num_literal)))))))

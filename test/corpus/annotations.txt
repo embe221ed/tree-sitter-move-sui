@@ -1,0 +1,75 @@
+================================================================================
+empty annotation argument list
+================================================================================
+module t::m { #[mode()] fun f() {} }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (annotation
+        (annotation_item
+          (annotation_list
+            (identifier))))
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block)))))
+
+================================================================================
+nested annotation list
+================================================================================
+module t::m { #[allow(lint(self_transfer))] fun f() {} }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (annotation
+        (annotation_item
+          (annotation_list
+            (identifier)
+            (annotation_item
+              (annotation_list
+                (identifier)
+                (annotation_item
+                  (annotation_expr
+                    (identifier))))))))
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block)))))
+
+================================================================================
+annotation with qualified constant value
+================================================================================
+module t::m { #[expected_failure(abort_code = a::m::ENotFound)] fun f() {} }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (annotation
+        (annotation_item
+          (annotation_list
+            (identifier)
+            (annotation_item
+              (annotation_expr
+                (identifier)
+                (module_access
+                  (module_identifier)
+                  (module_identifier)
+                  (identifier)))))))
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block)))))

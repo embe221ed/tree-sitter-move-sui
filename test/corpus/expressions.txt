@@ -1,0 +1,822 @@
+================================================================================
+assignment through dereference (P1)
+================================================================================
+module t::m { fun f(x: &mut u64) { *x = 5; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (ref_type
+              (mut_ref)
+              (primitive_type))))
+        (block
+          (block_item
+            (assign_expression
+              (dereference_expression
+                (name_expression
+                  (module_access
+                    (identifier))))
+              (num_literal))))))))
+
+================================================================================
+unary not binds tighter than binary ops (P2)
+================================================================================
+module t::m { fun f(a: bool, b: bool): bool { !a && b } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (primitive_type))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (ret_type
+          (primitive_type))
+        (block
+          (binary_expression
+            (unary_expression
+              (unary_op)
+              (name_expression
+                (module_access
+                  (identifier))))
+            (binary_operator)
+            (name_expression
+              (module_access
+                (identifier)))))))))
+
+================================================================================
+unary not with arithmetic (P2)
+================================================================================
+module t::m { fun f(x: u64): u64 { !x + 1 } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (ret_type
+          (primitive_type))
+        (block
+          (binary_expression
+            (unary_expression
+              (unary_op)
+              (name_expression
+                (module_access
+                  (identifier))))
+            (binary_operator)
+            (num_literal)))))))
+
+================================================================================
+cast folds a parenthesized binop (P3)
+================================================================================
+module t::m { fun f(i: u64): u256 { (i + 1 as u256) } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (ret_type
+          (primitive_type))
+        (block
+          (expression_list
+            (cast_expression
+              (binary_expression
+                (name_expression
+                  (module_access
+                    (identifier)))
+                (binary_operator)
+                (num_literal))
+              (primitive_type))))))))
+
+================================================================================
+cast binds tighter than comparison (P3)
+================================================================================
+module t::m { fun f(a: u8, b: u64): bool { a == b as u8 } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (primitive_type))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (ret_type
+          (primitive_type))
+        (block
+          (binary_expression
+            (name_expression
+              (module_access
+                (identifier)))
+            (binary_operator)
+            (cast_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (primitive_type))))))))
+
+================================================================================
+borrow of index expression
+================================================================================
+module t::m { fun f(v: &vector<u64>): &u64 { &v[0] } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (ref_type
+              (imm_ref)
+              (apply_type
+                (module_access
+                  (identifier)
+                  (type_arguments
+                    (primitive_type)))))))
+        (ret_type
+          (ref_type
+            (imm_ref)
+            (primitive_type)))
+        (block
+          (borrow_expression
+            (imm_ref)
+            (index_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (num_literal))))))))
+
+================================================================================
+deref of borrow
+================================================================================
+module t::m { fun f(x: u64): u64 { *&x } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (ret_type
+          (primitive_type))
+        (block
+          (dereference_expression
+            (borrow_expression
+              (imm_ref)
+              (name_expression
+                (module_access
+                  (identifier))))))))))
+
+================================================================================
+borrow of control expressions
+================================================================================
+module t::m { fun f(cond: bool) { foo(&if (cond) 0 else 1); foo(&return 0); foo(&abort 0); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (arg_list
+                (borrow_expression
+                  (imm_ref)
+                  (if_expression
+                    (name_expression
+                      (module_access
+                        (identifier)))
+                    (num_literal)
+                    (num_literal))))))
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (arg_list
+                (borrow_expression
+                  (imm_ref)
+                  (return_expression
+                    (num_literal))))))
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (arg_list
+                (borrow_expression
+                  (imm_ref)
+                  (abort_expression
+                    (num_literal)))))))))))
+
+================================================================================
+shift chain stays binary
+================================================================================
+module t::m { fun f(): u64 { 1 << 2 >> 3 } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (ret_type
+          (primitive_type))
+        (block
+          (binary_expression
+            (binary_expression
+              (num_literal)
+              (binary_operator)
+              (num_literal))
+            (binary_operator)
+            (num_literal)))))))
+
+================================================================================
+comparison chain stays binary
+================================================================================
+module t::m { fun f(a: u64, b: u64, c: u64, d: u64): bool { a < b && c > d } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (primitive_type))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (ret_type
+          (primitive_type))
+        (block
+          (binary_expression
+            (binary_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (binary_operator)
+              (name_expression
+                (module_access
+                  (identifier))))
+            (binary_operator)
+            (binary_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (binary_operator)
+              (name_expression
+                (module_access
+                  (identifier))))))))))
+
+================================================================================
+typed numeric literal suffix
+================================================================================
+module t::m { fun f(): u8 { 42u8 } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (ret_type
+          (primitive_type))
+        (block
+          (num_literal))))))
+
+================================================================================
+dot and index chains are left-associative (P4)
+================================================================================
+module t::m { fun f(a: A): u64 { a.b[0].c() } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (ret_type
+          (primitive_type))
+        (block
+          (dot_expression
+            (index_expression
+              (dot_expression
+                (name_expression
+                  (module_access
+                    (identifier)))
+                (name_expression
+                  (module_access
+                    (identifier))))
+              (num_literal))
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (arg_list))))))))
+
+================================================================================
+index applies to the whole dot chain (P4)
+================================================================================
+module t::m { fun f(x: X): u64 { x.f().g[1] } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (ret_type
+          (primitive_type))
+        (block
+          (index_expression
+            (dot_expression
+              (dot_expression
+                (name_expression
+                  (module_access
+                    (identifier)))
+                (call_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (arg_list)))
+              (name_expression
+                (module_access
+                  (identifier))))
+            (num_literal)))))))
+
+================================================================================
+indexing a vector literal
+================================================================================
+module t::m { fun f(): u64 { vector[1, 2][0] } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (ret_type
+          (primitive_type))
+        (block
+          (index_expression
+            (vector_expression
+              (num_literal)
+              (num_literal))
+            (num_literal)))))))
+
+================================================================================
+address literals with underscores (G4)
+================================================================================
+module t::m { fun f() { let a = @0x_1; let b = @1_0; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (address_literal)))
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (address_literal))))))))
+
+================================================================================
+variant path with type arguments on the final segment (G10)
+================================================================================
+module t::m { fun f(): u64 { let c = a::m::E::V<u64>(1); match (c) { a::m::E::V<u64>(n) => n } } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (ret_type
+          (primitive_type))
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (call_expression
+                (name_expression
+                  (module_access
+                    (module_identifier)
+                    (module_identifier)
+                    (module_identifier)
+                    (identifier)
+                    (type_arguments
+                      (primitive_type))))
+                (arg_list
+                  (num_literal)))))
+          (match_expression
+            (name_expression
+              (module_access
+                (identifier)))
+            (match_arm
+              (bind_list
+                (bind_unpack
+                  (name_expression
+                    (module_access
+                      (module_identifier)
+                      (module_identifier)
+                      (module_identifier)
+                      (identifier)
+                      (type_arguments
+                        (primitive_type))))
+                  (bind_fields
+                    (bind_positional_fields
+                      (bind_field
+                        (bind_list
+                          (bind_var
+                            (variable_identifier))))))))
+              (name_expression
+                (module_access
+                  (identifier))))))))))
+
+================================================================================
+reserved-word function name with type arguments (G11)
+================================================================================
+module t::m { fun f(): bool { exists<u64>(1) } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (ret_type
+          (primitive_type))
+        (block
+          (call_expression
+            (name_expression
+              (module_access
+                (identifier)
+                (type_arguments
+                  (primitive_type))))
+            (arg_list
+              (num_literal))))))))
+
+================================================================================
+positional field access is an anon_field_index (C7)
+================================================================================
+module t::m { fun f(p: Pair): u64 { p.0 + p.1.0 } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (ret_type
+          (primitive_type))
+        (block
+          (binary_expression
+            (dot_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (anon_field_index))
+            (binary_operator)
+            (dot_expression
+              (dot_expression
+                (name_expression
+                  (module_access
+                    (identifier)))
+                (anon_field_index))
+              (anon_field_index))))))))
+
+================================================================================
+block-ending if terminates before a binary operator (P5)
+================================================================================
+module t::m { fun f(c: bool, e2: u64): u64 { if (c) 1 else { e2 } + 1 } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (primitive_type))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (ret_type
+          (primitive_type))
+        (block
+          (binary_expression
+            (if_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (num_literal)
+              (block
+                (name_expression
+                  (module_access
+                    (identifier)))))
+            (binary_operator)
+            (num_literal)))))))
+
+================================================================================
+block-ending if without else terminates too (P5)
+================================================================================
+module t::m { fun f(c: bool): u64 { if (c) { 1 } + 2 } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (ret_type
+          (primitive_type))
+        (block
+          (binary_expression
+            (if_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (block
+                (num_literal)))
+            (binary_operator)
+            (num_literal)))))))
+
+================================================================================
+expression-ending else still absorbs the operator (P5)
+================================================================================
+module t::m { fun f(c: bool, e2: u64): u64 { if (c) 1 else e2 + 1 } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (primitive_type))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (ret_type
+          (primitive_type))
+        (block
+          (if_expression
+            (name_expression
+              (module_access
+                (identifier)))
+            (num_literal)
+            (binary_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (binary_operator)
+              (num_literal))))))))
+
+================================================================================
+labeled block terminates before a binary operator (P5)
+================================================================================
+module t::m { fun f(): u64 { 'a: { 1 } + 2 } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (ret_type
+          (primitive_type))
+        (block
+          (binary_expression
+            (identified_expression
+              (block_identifier
+                (label
+                  (identifier)))
+              (block
+                (num_literal)))
+            (binary_operator)
+            (num_literal)))))))
+
+================================================================================
+loop body block terminates before a binary operator (P5)
+================================================================================
+module t::m { fun f(): u64 { loop { break 5 } + 1 } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (ret_type
+          (primitive_type))
+        (block
+          (binary_expression
+            (loop_expression
+              (block
+                (break_expression
+                  (num_literal))))
+            (binary_operator)
+            (num_literal)))))))
+
+================================================================================
+return and abort with block operands terminate (P5)
+================================================================================
+module t::m { fun f(): u64 { let x = return { 1 } + 2; abort { 3 } + 4 } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (ret_type
+          (primitive_type))
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (binary_expression
+                (return_expression
+                  (block
+                    (num_literal)))
+                (binary_operator)
+                (num_literal))))
+          (binary_expression
+            (abort_expression
+              (block
+                (num_literal)))
+            (binary_operator)
+            (num_literal)))))))

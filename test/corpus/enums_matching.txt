@@ -1,0 +1,507 @@
+================================================================================
+enum definition with all variant kinds
+================================================================================
+module t::m { public enum Color has copy, drop { Red, Custom { r: u8 }, Pos(u8, u8) } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (enum_definition
+        (enum_identifier)
+        (ability_decls
+          (ability)
+          (ability))
+        (enum_variants
+          (variant
+            (variant_identifier))
+          (variant
+            (variant_identifier)
+            (datatype_fields
+              (named_fields
+                (field_annotation
+                  (field_identifier)
+                  (primitive_type)))))
+          (variant
+            (variant_identifier)
+            (datatype_fields
+              (positional_fields
+                (primitive_type)
+                (primitive_type)))))))))
+
+================================================================================
+match with paren guard
+================================================================================
+module t::m { fun f(o: Opt): u64 { match (o) { Opt::Some(n) if (n == 5) => n, Opt::None => 0 } } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (ret_type
+          (primitive_type))
+        (block
+          (match_expression
+            (name_expression
+              (module_access
+                (identifier)))
+            (match_arm
+              (bind_list
+                (bind_unpack
+                  (name_expression
+                    (module_access
+                      (module_identifier)
+                      (identifier)))
+                  (bind_fields
+                    (bind_positional_fields
+                      (bind_field
+                        (bind_list
+                          (bind_var
+                            (variable_identifier))))))))
+              (match_condition
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (binary_operator)
+                  (num_literal)))
+              (name_expression
+                (module_access
+                  (identifier))))
+            (match_arm
+              (bind_list
+                (bind_unpack
+                  (name_expression
+                    (module_access
+                      (module_identifier)
+                      (identifier)))))
+              (num_literal))))))))
+
+================================================================================
+match with or pattern
+================================================================================
+module t::m { fun f(c: Color): u64 { match (c) { Color::Red | Color::Green => 1, _ => 0 } } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (ret_type
+          (primitive_type))
+        (block
+          (match_expression
+            (name_expression
+              (module_access
+                (identifier)))
+            (match_arm
+              (bind_list
+                (or_bind_list
+                  (bind_unpack
+                    (name_expression
+                      (module_access
+                        (module_identifier)
+                        (identifier))))
+                  (bind_unpack
+                    (name_expression
+                      (module_access
+                        (module_identifier)
+                        (identifier))))))
+              (num_literal))
+            (match_arm
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (num_literal))))))))
+
+================================================================================
+match with at-bind
+================================================================================
+module t::m { fun f(o: Opt): Opt { match (o) { x @ Opt::Some(_) => x, other => other } } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (ret_type
+          (apply_type
+            (module_access
+              (identifier))))
+        (block
+          (match_expression
+            (name_expression
+              (module_access
+                (identifier)))
+            (match_arm
+              (bind_list
+                (at_bind
+                  (variable_identifier)
+                  (bind_list
+                    (bind_unpack
+                      (name_expression
+                        (module_access
+                          (module_identifier)
+                          (identifier)))
+                      (bind_fields
+                        (bind_positional_fields
+                          (bind_field
+                            (bind_list
+                              (bind_var
+                                (variable_identifier))))))))))
+              (name_expression
+                (module_access
+                  (identifier))))
+            (match_arm
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (name_expression
+                (module_access
+                  (identifier))))))))))
+
+================================================================================
+match with spread in positional and named patterns
+================================================================================
+module t::m { fun f(s: S): u64 { match (s) { S::A(x, ..) => x, S::B { y, .. } => y } } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (ret_type
+          (primitive_type))
+        (block
+          (match_expression
+            (name_expression
+              (module_access
+                (identifier)))
+            (match_arm
+              (bind_list
+                (bind_unpack
+                  (name_expression
+                    (module_access
+                      (module_identifier)
+                      (identifier)))
+                  (bind_fields
+                    (bind_positional_fields
+                      (bind_field
+                        (bind_list
+                          (bind_var
+                            (variable_identifier))))
+                      (bind_field)))))
+              (name_expression
+                (module_access
+                  (identifier))))
+            (match_arm
+              (bind_list
+                (bind_unpack
+                  (name_expression
+                    (module_access
+                      (module_identifier)
+                      (identifier)))
+                  (bind_fields
+                    (bind_named_fields
+                      (bind_field
+                        (bind_list
+                          (bind_var
+                            (variable_identifier))))
+                      (bind_field)))))
+              (name_expression
+                (module_access
+                  (identifier))))))))))
+
+================================================================================
+match with mut pattern binder
+================================================================================
+module t::m { fun f(o: Opt): u64 { match (o) { Opt::Some(mut n) => { n = n + 1; n }, Opt::None => 0 } } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (ret_type
+          (primitive_type))
+        (block
+          (match_expression
+            (name_expression
+              (module_access
+                (identifier)))
+            (match_arm
+              (bind_list
+                (bind_unpack
+                  (name_expression
+                    (module_access
+                      (module_identifier)
+                      (identifier)))
+                  (bind_fields
+                    (bind_positional_fields
+                      (mut_bind_field
+                        (bind_field
+                          (bind_list
+                            (bind_var
+                              (variable_identifier)))))))))
+              (block
+                (block_item
+                  (assign_expression
+                    (name_expression
+                      (module_access
+                        (identifier)))
+                    (binary_expression
+                      (name_expression
+                        (module_access
+                          (identifier)))
+                      (binary_operator)
+                      (num_literal))))
+                (name_expression
+                  (module_access
+                    (identifier)))))
+            (match_arm
+              (bind_list
+                (bind_unpack
+                  (name_expression
+                    (module_access
+                      (module_identifier)
+                      (identifier)))))
+              (num_literal))))))))
+
+================================================================================
+variant construction as call and pack
+================================================================================
+module t::m { fun f(): Color { let c = Color::Custom { r: 1 }; Color::Pos(1, 2) } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (ret_type
+          (apply_type
+            (module_access
+              (identifier))))
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (pack_expression
+                (name_expression
+                  (module_access
+                    (module_identifier)
+                    (identifier)))
+                (field_initialize_list
+                  (exp_field
+                    (field_identifier)
+                    (num_literal))))))
+          (call_expression
+            (name_expression
+              (module_access
+                (module_identifier)
+                (identifier)))
+            (arg_list
+              (num_literal)
+              (num_literal))))))))
+
+================================================================================
+parenthesized or-pattern groups
+================================================================================
+module t::m { fun f(c: C): u64 { match (c) { (C::A | C::B) | C::D => 1, x @ (C::E | C::F) => 2, _ => 0 } } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (ret_type
+          (primitive_type))
+        (block
+          (match_expression
+            (name_expression
+              (module_access
+                (identifier)))
+            (match_arm
+              (bind_list
+                (or_bind_list
+                  (paren_bind
+                    (or_bind_list
+                      (bind_unpack
+                        (name_expression
+                          (module_access
+                            (module_identifier)
+                            (identifier))))
+                      (bind_unpack
+                        (name_expression
+                          (module_access
+                            (module_identifier)
+                            (identifier))))))
+                  (bind_unpack
+                    (name_expression
+                      (module_access
+                        (module_identifier)
+                        (identifier))))))
+              (num_literal))
+            (match_arm
+              (bind_list
+                (at_bind
+                  (variable_identifier)
+                  (bind_list
+                    (paren_bind
+                      (or_bind_list
+                        (bind_unpack
+                          (name_expression
+                            (module_access
+                              (module_identifier)
+                              (identifier))))
+                        (bind_unpack
+                          (name_expression
+                            (module_access
+                              (module_identifier)
+                              (identifier)))))))))
+              (num_literal))
+            (match_arm
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (num_literal))))))))
+
+================================================================================
+unbalanced or-pattern parens are rejected
+:error
+================================================================================
+module t::m { fun f(o: O): u64 { match (o) { (O::A | O::B => 1, O::C) | O::D => 2 } } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+parenthesized at-binds as or-operands
+================================================================================
+module t::m { fun f(m: Maybe): u64 { match (m) { (x @ Maybe::Nothing) | (x @ Maybe::Just(_)) => 1, _ => 0 } } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (ret_type
+          (primitive_type))
+        (block
+          (match_expression
+            (name_expression
+              (module_access
+                (identifier)))
+            (match_arm
+              (bind_list
+                (or_bind_list
+                  (paren_bind
+                    (at_bind
+                      (variable_identifier)
+                      (bind_list
+                        (bind_unpack
+                          (name_expression
+                            (module_access
+                              (module_identifier)
+                              (identifier)))))))
+                  (paren_bind
+                    (at_bind
+                      (variable_identifier)
+                      (bind_list
+                        (bind_unpack
+                          (name_expression
+                            (module_access
+                              (module_identifier)
+                              (identifier)))
+                          (bind_fields
+                            (bind_positional_fields
+                              (bind_field
+                                (bind_list
+                                  (bind_var
+                                    (variable_identifier))))))))))))
+              (num_literal))
+            (match_arm
+              (bind_list
+                (bind_var
+                  (variable_identifier)))
+              (num_literal))))))))

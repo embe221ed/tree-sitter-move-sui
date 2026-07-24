@@ -1,0 +1,119 @@
+================================================================================
+module label form keeps items in the module body
+================================================================================
+module a::b;
+fun f() {}
+public struct S has copy {}
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (newline)
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block))
+      (newline)
+      (struct_definition
+        (struct_identifier)
+        (ability_decls
+          (ability))
+        (datatype_fields
+          (named_fields))))))
+
+================================================================================
+legacy address block with plain-name module
+================================================================================
+address a { module m { fun f(): u64 { 42 } } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (address_block
+    (module_identifier)
+    (module_definition
+      (module_identifier)
+      (module_body
+        (function_definition
+          (function_identifier)
+          (function_parameters)
+          (ret_type
+            (primitive_type))
+          (block
+            (num_literal)))))))
+
+================================================================================
+module extension
+================================================================================
+extend module a::m { fun g() {} }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_extension_definition
+    (module_definition
+      (module_identity
+        (module_identifier)
+        (module_identifier))
+      (module_body
+        (function_definition
+          (function_identifier)
+          (function_parameters)
+          (block))))))
+
+================================================================================
+native macro signature parses
+================================================================================
+module t::m { native macro fun foo(); }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (native_macro_function_definition
+        (modifier)
+        (function_identifier)
+        (function_parameters)))))
+
+================================================================================
+friend declaration with member path parses
+================================================================================
+module t::m { friend a::m::foo; }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (friend_declaration
+        (friend_access
+          (module_identity
+            (module_identifier)
+            (module_identifier))
+          (identifier))))))
+
+================================================================================
+many modifiers on a function signature (C10)
+================================================================================
+module t::m { public entry native fun f(); }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (native_function_definition
+        (modifier)
+        (modifier)
+        (modifier)
+        (function_identifier)
+        (function_parameters)))))

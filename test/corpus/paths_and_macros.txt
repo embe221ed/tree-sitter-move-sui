@@ -1,0 +1,206 @@
+================================================================================
+two-part path is module::member, not address::module
+================================================================================
+module t::m { fun f(c: &Coin) { coin::value(c); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (ref_type
+              (imm_ref)
+              (apply_type
+                (module_access
+                  (identifier))))))
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (module_identifier)
+                  (identifier)))
+              (arg_list
+                (name_expression
+                  (module_access
+                    (identifier)))))))))))
+
+================================================================================
+qualified macro call keeps macro name as member (b9_scaling case)
+================================================================================
+module t::m { fun f() { constants::b9_scaling!(); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (macro_call_expression
+              (macro_module_access
+                (module_access
+                  (module_identifier)
+                  (identifier)))
+              (arg_list))))))))
+
+================================================================================
+bare macro call
+================================================================================
+module t::m { fun f(x: u64) { assert!(x > 0, 0); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (block
+          (block_item
+            (macro_call_expression
+              (macro_module_access
+                (module_access
+                  (identifier)))
+              (arg_list
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (binary_operator)
+                  (num_literal))
+                (num_literal)))))))))
+
+================================================================================
+fully qualified macro call
+================================================================================
+module t::m { fun f() { std::u64::max!(1, 2); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (macro_call_expression
+              (macro_module_access
+                (module_access
+                  (module_identifier)
+                  (module_identifier)
+                  (identifier)))
+              (arg_list
+                (num_literal)
+                (num_literal)))))))))
+
+================================================================================
+method macro call
+================================================================================
+module t::m { fun f(opt: Option<u64>): u64 { opt.destroy_or!(abort 0) } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)
+                (type_arguments
+                  (primitive_type))))))
+        (ret_type
+          (primitive_type))
+        (block
+          (dot_expression
+            (name_expression
+              (module_access
+                (identifier)))
+            (macro_call_expression
+              (macro_module_access
+                (module_access
+                  (identifier)))
+              (arg_list
+                (abort_expression
+                  (num_literal))))))))))
+
+================================================================================
+enum variant path in expression
+================================================================================
+module t::m { fun f(): Color { Color::Red } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (ret_type
+          (apply_type
+            (module_access
+              (identifier))))
+        (block
+          (name_expression
+            (module_access
+              (module_identifier)
+              (identifier))))))))
+
+================================================================================
+four-part enum variant path
+================================================================================
+module t::m { fun f(): Color { a::b::Color::Red } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (ret_type
+          (apply_type
+            (module_access
+              (identifier))))
+        (block
+          (name_expression
+            (module_access
+              (module_identifier)
+              (module_identifier)
+              (module_identifier)
+              (identifier))))))))
