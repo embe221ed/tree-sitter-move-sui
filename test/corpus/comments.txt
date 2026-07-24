@@ -17,10 +17,8 @@ module t::m {
       (newline)
       (line_comment
         (doc_comment))
-      (newline)
       (line_comment
         (doc_comment))
-      (newline)
       (function_definition
         (function_identifier)
         (function_parameters)

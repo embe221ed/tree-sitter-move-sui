@@ -27,8 +27,9 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 QUERY = ROOT / "queries" / "highlights.scm"
 ASSERT_RE = re.compile(r"^\s*//\s*(<-|\^)\s*([\w.]+)\s*$")
 PATTERN_RE = re.compile(r"pattern:\s*(\d+)")
+# multi-line captures print without the numeric index prefix
 CAPTURE_RE = re.compile(
-    r"capture: \d+ - ([\w.]+), start: \((\d+), (\d+)\), end: \((\d+), (\d+)\)"
+    r"capture: (?:\d+ - )?([\w.]+), start: \((\d+), (\d+)\), end: \((\d+), (\d+)\)"
 )
 
 
@@ -89,12 +90,35 @@ def winning_captures(path):
     return winner
 
 
+def doc_comment_spans_include_newline(path):
+    """doc_comment tokens must extend through their newline (ending at column
+    0 of the next row) — the markdown injection relies on those line
+    boundaries so a `# heading` cannot bleed into following doc lines."""
+    out = subprocess.run(
+        ["tree-sitter", "query", str(QUERY), str(path)],
+        cwd=ROOT, capture_output=True, text=True, check=True,
+    ).stdout
+    bad = 0
+    lines = Path(path).read_text().splitlines()
+    for m in CAPTURE_RE.finditer(out):
+        name, sr, sc, er, ec = m.group(1), *map(int, m.groups()[1:])
+        is_line_doc = sr < len(lines) and lines[sr][:sc].lstrip().startswith("///")
+        if name == "comment.documentation" and is_line_doc and sr == er:
+            print(
+                f"FAIL {Path(path).name}: doc comment at {sr + 1}:{sc + 1} "
+                f"does not include its trailing newline"
+            )
+            bad += 1
+    return bad
+
+
 def main():
     failures = 0
     files = sorted(Path(__file__).resolve().parent.glob("*.move"))
     for f in files:
         text = f.read_text()
         winner = winning_captures(f)
+        failures += doc_comment_spans_include_newline(f)
         for row, col, expected in assertions(text):
             actual = winner(row, col)
             if actual != expected:

@@ -82,9 +82,14 @@ bool tree_sitter_move_external_scanner_scan(void *payload, TSLexer *lexer,
 
   // The rest of a `///` doc line. May be empty (a bare `///` is a markdown
   // paragraph break); only the scanner can emit zero-width tokens, and it
-  // runs before extras, so the newline stays outside the comment.
+  // runs before extras. The trailing newline is included in the token so
+  // that markdown injection of the combined doc lines sees line boundaries
+  // (otherwise a leading `#` heading would run on across every doc line).
   if (valid_symbols[DOC_LINE_CONTENT] && !in_error_recovery) {
     while (lexer->lookahead != '\n' && !lexer->eof(lexer)) {
+      lexer->advance(lexer, false);
+    }
+    if (lexer->lookahead == '\n') {
       lexer->advance(lexer, false);
     }
     lexer->mark_end(lexer);
