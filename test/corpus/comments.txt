@@ -16,8 +16,7 @@ module t::m {
     (module_body
       (newline)
       (line_comment
-        (doc_comment))
-      (line_comment
+        (doc_comment)
         (doc_comment))
       (function_definition
         (function_identifier)
@@ -69,3 +68,47 @@ module t::m { /* a /* b */ c */ fun f() {} }
         (function_identifier)
         (function_parameters)
         (block)))))
+
+================================================================================
+contiguous doc lines group into one block; blank lines split blocks
+================================================================================
+module t::m {
+    /// # Heading
+    /// body of first block
+    fun f() {}
+
+    /// second block line one
+    /// second block line two
+
+    /// third block
+    fun h() {}
+}
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (newline)
+      (line_comment
+        (doc_comment)
+        (doc_comment))
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block))
+      (newline)
+      (newline)
+      (line_comment
+        (doc_comment)
+        (doc_comment))
+      (newline)
+      (line_comment
+        (doc_comment))
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block))
+      (newline))))

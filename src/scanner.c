@@ -22,6 +22,8 @@ enum TokenType {
   BLOCK_COMMENT,
   DOC_LINE_MARKER,
   DOC_LINE_CONTENT,
+  DOC_LINE_CONT_MARKER,
+  DOC_BLOCK_END,
   ERROR_SENTINEL,
 };
 
@@ -85,6 +87,38 @@ bool tree_sitter_move_external_scanner_scan(void *payload, TSLexer *lexer,
   // runs before extras. The trailing newline is included in the token so
   // that markdown injection of the combined doc lines sees line boundaries
   // (otherwise a leading `#` heading would run on across every doc line).
+  // Continuation of a doc block: the next line is also `///` with nothing
+  // but blanks before it. A blank line or code line ends the block (and so
+  // ends the markdown document injected into it). Runs before extras, so
+  // the check sees the raw start of the next line.
+  if (valid_symbols[DOC_LINE_CONT_MARKER] && !in_error_recovery) {
+    // zero-width fallback: if the block does not continue, emit the
+    // (required) end-of-block token at the current position
+    lexer->mark_end(lexer);
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
+      lexer->advance(lexer, false);
+    }
+    if (lexer->lookahead == '/') {
+      lexer->advance(lexer, false);
+      if (lexer->lookahead == '/') {
+        lexer->advance(lexer, false);
+        if (lexer->lookahead == '/') {
+          lexer->advance(lexer, false);
+          if (lexer->lookahead != '/') {
+            lexer->mark_end(lexer);
+            lexer->result_symbol = DOC_LINE_CONT_MARKER;
+            return true;
+          }
+        }
+      }
+    }
+    if (valid_symbols[DOC_BLOCK_END]) {
+      lexer->result_symbol = DOC_BLOCK_END;
+      return true;
+    }
+    return false;
+  }
+
   if (valid_symbols[DOC_LINE_CONTENT] && !in_error_recovery) {
     while (lexer->lookahead != '\n' && !lexer->eof(lexer)) {
       lexer->advance(lexer, false);

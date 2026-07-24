@@ -6,14 +6,14 @@
 ] @injection.content
   (#set! injection.language "comment"))
 
-; `///` doc comments expose their text (without the marker) as doc_comment
-; nodes; combined, they form one markdown document, matching how the
-; move-analyzer hover renders them. The doc_comment token includes its
-; trailing newline so markdown line constructs like `# headings` terminate at
-; the end of their own line instead of bleeding into every following doc line.
-((doc_comment) @injection.content
-  (#set! injection.language "markdown")
-  (#set! injection.combined))
+; Each contiguous `///` run is one line_comment node whose doc_comment
+; children (marker-free, newline-inclusive) form one markdown document.
+; Injecting per block — not with a file-wide injection.combined — keeps
+; markdown sections (`# headings`) from spanning unrelated docstrings and
+; the code between them.
+(line_comment
+  (doc_comment)+ @injection.content
+  (#set! injection.language "markdown"))
 
 ; `/** ... */` block doc comments (no content node yet — backlog S3b)
 ((block_comment) @injection.content

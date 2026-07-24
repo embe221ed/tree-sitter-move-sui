@@ -8098,6 +8098,31 @@
               },
               "named": true,
               "value": "doc_comment"
+            },
+            {
+              "type": "REPEAT",
+              "content": {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "_doc_line_cont_marker"
+                  },
+                  {
+                    "type": "ALIAS",
+                    "content": {
+                      "type": "SYMBOL",
+                      "name": "_doc_line_content"
+                    },
+                    "named": true,
+                    "value": "doc_comment"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "SYMBOL",
+              "name": "_doc_block_end"
             }
           ]
         }
@@ -8232,6 +8257,14 @@
     {
       "type": "SYMBOL",
       "name": "_doc_line_content"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_doc_line_cont_marker"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_doc_block_end"
     },
     {
       "type": "SYMBOL",

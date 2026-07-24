@@ -59,6 +59,8 @@ module.exports = grammar({
     $.block_comment,
     $._doc_line_marker,
     $._doc_line_content,
+    $._doc_line_cont_marker,
+    $._doc_block_end,
     $._error_sentinel,
   ],
   supertypes: $ => [
@@ -1280,12 +1282,21 @@ module.exports = grammar({
 
     _forall: $ => 'forall',
     _exists: $ => 'exists',
-    // `///` doc comments expose a doc_comment child used for markdown
-    // injection; `////...` is a plain comment again, as in Rust. The marker
-    // and content are scanner tokens (see `externals`).
+    // `///` doc comments expose doc_comment children used for markdown
+    // injection; `////...` is a plain comment again, as in Rust. A contiguous
+    // run of `///` lines (no blank or code line between) groups into ONE
+    // line_comment node, so each run injects as its own markdown document —
+    // a `# heading` provides context only within its own doc block. The
+    // marker/content/continuation tokens are scanner tokens (see `externals`).
     line_comment: $ => choice(
       token(/\/\/[^\n]*/),
-      seq($._doc_line_marker, alias($._doc_line_content, $.doc_comment)),
+      seq(
+        $._doc_line_marker,
+        alias($._doc_line_content, $.doc_comment),
+        repeat(seq($._doc_line_cont_marker, alias($._doc_line_content, $.doc_comment))),
+        // zero-width scanner token: gives the extra rule an unambiguous ending
+        $._doc_block_end,
+      ),
     ),
     newline: $ => token(/\n/),
     _whitespace: $ => /\s/,
