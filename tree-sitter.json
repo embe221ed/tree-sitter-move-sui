@@ -1,0 +1,43 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "grammars": [
+    {
+      "name": "move",
+      "camelcase": "Move",
+      "scope": "source.move",
+      "path": ".",
+      "file-types": [
+        "move"
+      ],
+      "injection-regex": "^move$",
+      "highlights": [
+        "queries/highlights.scm"
+      ],
+      "injections": [
+        "queries/injections.scm"
+      ],
+      "locals": [
+        "queries/locals.scm"
+      ],
+      "tags": [
+        "queries/tags.scm"
+      ]
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "license": "Apache-2.0",
+    "description": "Tree-sitter parser for the Sui dialect of the Move language",
+    "links": {
+      "repository": "https://github.com/embe221ed/tree-sitter-move-sui"
+    }
+  },
+  "bindings": {
+    "c": false,
+    "go": false,
+    "node": true,
+    "python": false,
+    "rust": true,
+    "swift": false
+  }
+}

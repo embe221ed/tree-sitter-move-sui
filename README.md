@@ -57,12 +57,18 @@ and `test/highlights/check.py` resolves the same binary. On a clean tree a
 regeneration is a no-op; if it moves anything under `src/`, commit that along
 with the `grammar.js` change that caused it.
 
-`generate` prints `No 'tree-sitter.json' file found ... Using ABI version 14
-instead`. That is deliberate and load-bearing: the absence of the file is what
-pins the output to ABI 14, and the prettier-move plugin loads this grammar
-through `web-tree-sitter` 0.20.x, which cannot load ABI 15 parsers. Adding
-`tree-sitter.json` switches generation to ABI 15 — do it (and regenerate the
-wasm) only after upgrading that dependency.
+`tree-sitter.json` carries the grammar metadata (scope, file types, query
+paths) that used to live under package.json's `tree-sitter` key, and its
+presence is also what selects **ABI 15** — without it the CLI falls back to ABI
+14 and warns on every run. The ABI is not expressible in the file itself; it
+follows from the file existing, so don't delete it to silence something.
+
+An earlier revision of this note claimed ABI 14 had to be kept for the
+prettier-move plugin, which loads a Move grammar through `web-tree-sitter`
+0.20.x. That does not apply here: prettier-move regenerates its wasm via
+`scripts/treesitter-wasm-gen.sh`, which clones `tzakian/tree-sitter-move` — a
+different upstream — and nothing in it reads this repo. This grammar has no
+wasm build at all. If you ever do point that script here, pass `--abi 14`.
 
 Consumers embedding this grammar want a matching-generation runtime. Neovim and
 the Rust dev-dependency are both on the tree-sitter 0.25+ line; some scanner

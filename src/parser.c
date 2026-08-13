@@ -6,7 +6,7 @@
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif
 
-#define LANGUAGE_VERSION 14
+#define LANGUAGE_VERSION 15
 #define STATE_COUNT 2080
 #define LARGE_STATE_COUNT 585
 #define SYMBOL_COUNT 343
@@ -17,7 +17,7 @@
 #define MAX_ALIAS_SEQUENCE_LENGTH 11
 #define MAX_RESERVED_WORD_SET_SIZE 0
 #define PRODUCTION_ID_COUNT 226
-#define SUPERTYPE_COUNT 0
+#define SUPERTYPE_COUNT 5
 
 enum ts_symbol_identifiers {
   sym_identifier = 1,
@@ -5786,6 +5786,80 @@ static const TSStateId ts_primary_state_ids[STATE_COUNT] = {
   [2079] = 2079,
 };
 
+static const TSSymbol ts_supertype_symbols[SUPERTYPE_COUNT] = {
+  sym__bind,
+  sym__expression,
+  sym__literal_value,
+  sym__spec_block_target,
+  sym__type,
+};
+
+static const TSMapSlice ts_supertype_map_slices[] = {
+  [sym__bind] = {.index = 0, .length = 5},
+  [sym__expression] = {.index = 5, .length = 31},
+  [sym__literal_value] = {.index = 36, .length = 6},
+  [sym__spec_block_target] = {.index = 42, .length = 3},
+  [sym__type] = {.index = 45, .length = 5},
+};
+
+static const TSSymbol ts_supertype_map_entries[] = {
+  [0] =
+    alias_sym_bind_var,
+    sym__literal_value,
+    sym_at_bind,
+    sym_bind_unpack,
+    sym_mut_bind_var,
+  [5] =
+    sym__literal_value,
+    sym_abort_expression,
+    sym_annotation_expression,
+    sym_assign_expression,
+    sym_binary_expression,
+    sym_block,
+    sym_borrow_expression,
+    sym_break_expression,
+    sym_call_expression,
+    sym_cast_expression,
+    sym_continue_expression,
+    sym_dereference_expression,
+    sym_dot_expression,
+    sym_expression_list,
+    sym_identified_expression,
+    sym_if_expression,
+    sym_index_expression,
+    sym_lambda_expression,
+    sym_loop_expression,
+    sym_macro_call_expression,
+    sym_match_expression,
+    sym_move_or_copy_expression,
+    sym_name_expression,
+    sym_pack_expression,
+    sym_quantifier_expression,
+    sym_return_expression,
+    sym_spec_block,
+    sym_unary_expression,
+    sym_unit_expression,
+    sym_vector_expression,
+    sym_while_expression,
+  [36] =
+    sym_address_literal,
+    sym_bool_literal,
+    sym_byte_string_literal,
+    sym_hex_string_literal,
+    sym_num_literal,
+    sym_string_literal,
+  [42] =
+    alias_sym_spec_block_target_module,
+    sym_identifier,
+    sym_spec_block_target_schema,
+  [45] =
+    sym_apply_type,
+    sym_function_type,
+    sym_primitive_type,
+    sym_ref_type,
+    sym_tuple_type,
+};
+
 static bool ts_lex(TSLexer *lexer, TSStateId state) {
   START_LEXER();
   eof = lexer->eof(lexer);
@@ -7958,7 +8032,7 @@ static bool ts_lex_keywords(TSLexer *lexer, TSStateId state) {
   }
 }
 
-static const TSLexMode ts_lex_modes[STATE_COUNT] = {
+static const TSLexerMode ts_lex_modes[STATE_COUNT] = {
   [0] = {.lex_state = 0, .external_lex_state = 1},
   [1] = {.lex_state = 37, .external_lex_state = 2},
   [2] = {.lex_state = 33, .external_lex_state = 3},
@@ -128659,6 +128733,7 @@ TS_PUBLIC const TSLanguage *tree_sitter_move(void) {
     .state_count = STATE_COUNT,
     .large_state_count = LARGE_STATE_COUNT,
     .production_id_count = PRODUCTION_ID_COUNT,
+    .supertype_count = SUPERTYPE_COUNT,
     .field_count = FIELD_COUNT,
     .max_alias_sequence_length = MAX_ALIAS_SEQUENCE_LENGTH,
     .parse_table = &ts_parse_table[0][0],
@@ -128669,6 +128744,9 @@ TS_PUBLIC const TSLanguage *tree_sitter_move(void) {
     .field_names = ts_field_names,
     .field_map_slices = ts_field_map_slices,
     .field_map_entries = ts_field_map_entries,
+    .supertype_map_slices = ts_supertype_map_slices,
+    .supertype_map_entries = ts_supertype_map_entries,
+    .supertype_symbols = ts_supertype_symbols,
     .symbol_metadata = ts_symbol_metadata,
     .public_symbol_map = ts_symbol_map,
     .alias_map = ts_non_terminal_alias_map,
@@ -128687,6 +128765,13 @@ TS_PUBLIC const TSLanguage *tree_sitter_move(void) {
       tree_sitter_move_external_scanner_deserialize,
     },
     .primary_state_ids = ts_primary_state_ids,
+    .name = "move",
+    .max_reserved_word_set_size = 0,
+    .metadata = {
+      .major_version = 1,
+      .minor_version = 0,
+      .patch_version = 0,
+    },
   };
   return &language;
 }
