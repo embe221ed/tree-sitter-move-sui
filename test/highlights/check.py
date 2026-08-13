@@ -14,17 +14,34 @@
 # must be the *winning* capture at that position — the last one the highlights
 # query produces, which is what nvim renders. (`tree-sitter test` can't run
 # these because its loader requires a globally configured, conventionally
-# named parser directory; this checker only needs the CLI on PATH.)
+# named parser directory.)
 #
 # Usage: python3 test/highlight/check.py  (from the grammar root)
 
+import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 QUERY = ROOT / "queries" / "highlights.scm"
+
+
+def tree_sitter_cli():
+    """The CLI version matters — see the comment in run-tests.sh. Prefer the
+    one pinned in package.json over whatever a distro put on PATH."""
+    local = ROOT / "node_modules" / ".bin" / "tree-sitter"
+    if local.is_file() and os.access(local, os.X_OK):
+        return str(local)
+    found = os.environ.get("TREE_SITTER") or shutil.which("tree-sitter")
+    if not found:
+        sys.exit("tree-sitter CLI not found — run 'npm install' in the grammar root")
+    return found
+
+
+CLI = tree_sitter_cli()
 ASSERT_RE = re.compile(r"^\s*//\s*(<-|\^)\s*([\w.]+)\s*$")
 PATTERN_RE = re.compile(r"pattern:\s*(\d+)")
 # multi-line captures print without the numeric index prefix
@@ -56,7 +73,7 @@ def winning_captures(path):
     override earlier ones, and within a pattern, later captures win.
     """
     out = subprocess.run(
-        ["tree-sitter", "query", str(QUERY), str(path)],
+        [CLI, "query", str(QUERY), str(path)],
         cwd=ROOT, capture_output=True, text=True, check=True,
     ).stdout
     spans = []
@@ -95,7 +112,7 @@ def doc_comment_spans_include_newline(path):
     0 of the next row) — the markdown injection relies on those line
     boundaries so a `# heading` cannot bleed into following doc lines."""
     out = subprocess.run(
-        ["tree-sitter", "query", str(QUERY), str(path)],
+        [CLI, "query", str(QUERY), str(path)],
         cwd=ROOT, capture_output=True, text=True, check=True,
     ).stdout
     bad = 0

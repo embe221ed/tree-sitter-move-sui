@@ -69,7 +69,7 @@ mod tests {
                 if node.kind() == "doc_comment" {
                     widths.push(node.end_byte() - node.start_byte());
                 }
-                for i in 0..node.child_count() {
+                for i in 0..node.child_count() as u32 {
                     stack.push(node.child(i).unwrap());
                 }
             }

@@ -30,4 +30,6 @@ tree-sitter-language = "0.1"
 cc = "1"
 
 [dev-dependencies]
-tree-sitter = "0.25"
+# Track the CLI pinned in package.json: some scanner invariants (zero-width
+# tokens) only surface on a runtime of the same generation as the generator.
+tree-sitter = "0.26"

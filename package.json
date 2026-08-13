@@ -1,63 +1,43 @@
 {
-  "dependencies": {
-    "node-addon-api": "^7.1.0",
-    "node-gyp-build": "^4.8.0"
-  },
-  "peerDependencies": {
-    "tree-sitter": "^0.21.0"
-  },
-  "peerDependenciesMeta": {
-    "tree_sitter": {
-      "optional": true
-    }
-  },
   "name": "tree-sitter-move",
   "version": "1.0.0",
-  "description": "Tree sitter parser for Move",
+  "description": "Tree-sitter parser for the Sui dialect of the Move language",
+  "license": "Apache-2.0",
   "main": "bindings/node",
   "types": "bindings/node",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/embe221ed/tree-sitter-move-sui.git"
+  },
   "scripts": {
-    "test": "test",
+    "generate": "tree-sitter generate",
+    "test": "./run-tests.sh",
     "install": "node-gyp-build",
     "prebuildify": "prebuildify --napi --strip"
   },
-  "author": "",
-  "license": "Apache-2.0",
-  "devDependencies": {
-    "tree-sitter-cli": "^0.20.8",
-    "prebuildify": "^6.0.0"
+  "dependencies": {
+    "node-addon-api": "^8.9.2",
+    "node-gyp-build": "^4.8.4"
   },
-  "tree-sitter": [
-    {
-      "scope": "source.move",
-      "injection-regex": "move",
-      "file-types": [
-        "move"
-      ],
-      "highlights": [
-        "queries/highlights.scm"
-      ],
-      "locals": [
-        "queries/locals.scm"
-      ],
-      "injections": [
-        "queries/injections.scm"
-      ],
-      "tags": [
-        "queries/tags.scm"
-      ]
+  "peerDependencies": {
+    "tree-sitter": "^0.25.1"
+  },
+  "peerDependenciesMeta": {
+    "tree-sitter": {
+      "optional": true
     }
-  ],
+  },
+  "devDependencies": {
+    "prebuildify": "^6.0.1",
+    "tree-sitter-cli": "^0.26.12"
+  },
   "files": [
     "grammar.js",
+    "tree-sitter.json",
     "binding.gyp",
     "prebuilds/**",
     "bindings/node/*",
     "queries/*",
     "src/**"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/embe221ed/tree-sitter-move-sui.git"
-  }
+  ]
 }
