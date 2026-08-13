@@ -104,7 +104,13 @@ bool tree_sitter_move_external_scanner_scan(void *payload, TSLexer *lexer,
         lexer->advance(lexer, false);
         if (lexer->lookahead == '/') {
           lexer->advance(lexer, false);
-          if (lexer->lookahead != '/') {
+          // A `///` with nothing after it — end of input, which for an
+          // injected region means the end of that region — would leave
+          // DOC_LINE_CONTENT below with nothing to consume, and a zero-width
+          // `doc_comment` makes its markdown injection range empty. An empty
+          // range set means "no included ranges", i.e. the whole buffer. End
+          // the block instead; the `///` stays a plain line_comment.
+          if (lexer->lookahead != '/' && !lexer->eof(lexer)) {
             lexer->mark_end(lexer);
             lexer->result_symbol = DOC_LINE_CONT_MARKER;
             return true;
@@ -159,6 +165,11 @@ bool tree_sitter_move_external_scanner_scan(void *payload, TSLexer *lexer,
       }
       lexer->advance(lexer, false);
       if (lexer->lookahead == '/') {
+        return false;
+      }
+      // Same reason as the continuation marker above: don't open a doc block
+      // whose content token would be zero-width.
+      if (lexer->eof(lexer)) {
         return false;
       }
       lexer->mark_end(lexer);

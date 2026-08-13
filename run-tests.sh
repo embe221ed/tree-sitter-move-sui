@@ -24,6 +24,14 @@ tree-sitter test
 # Highlight assertion tests (test/highlights).
 python3 test/highlights/check.py
 
+# Scanner invariants that only surface on a modern tree-sitter runtime (the
+# rust dev-dependency pins 0.25), so `tree-sitter test` cannot express them.
+if command -v cargo >/dev/null 2>&1; then
+    cargo test --quiet
+else
+    echo "SKIP: cargo not found, skipping runtime invariant tests"
+fi
+
 # `parse -q` only prints files whose parse contains errors, so any output here
 # is a failure.
 sweep=(tests/*.move)
