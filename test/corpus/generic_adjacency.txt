@@ -1,0 +1,776 @@
+================================================================================
+whitespace-separated angle brackets are comparisons, not type arguments
+================================================================================
+module t::m { fun f(h: H, a: u64, b: u64, c: u64, d: u64) { h(a < b, c > (d)); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier))))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (arg_list
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (binary_operator)
+                  (name_expression
+                    (module_access
+                      (identifier))))
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (binary_operator)
+                  (expression_list
+                    (name_expression
+                      (module_access
+                        (identifier)))))))))))))
+
+================================================================================
+comparison gaps may contain block comments
+================================================================================
+module t::m { fun f() { h(a/* gap */< b, c > (d)); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (arg_list
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (block_comment)
+                  (binary_operator)
+                  (name_expression
+                    (module_access
+                      (identifier))))
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (binary_operator)
+                  (expression_list
+                    (name_expression
+                      (module_access
+                        (identifier)))))))))))))
+
+================================================================================
+comparison gaps may contain nested block comments
+================================================================================
+module t::m { fun f() { h(a/* outer /* inner */ end */< b, c > (d)); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (arg_list
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (block_comment)
+                  (binary_operator)
+                  (name_expression
+                    (module_access
+                      (identifier))))
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (binary_operator)
+                  (expression_list
+                    (name_expression
+                      (module_access
+                        (identifier)))))))))))))
+
+================================================================================
+comparison gaps may contain line comments and newlines
+================================================================================
+module t::m { fun f() { h(a// gap
+< b, c > (d)); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (arg_list
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (line_comment)
+                  (newline)
+                  (binary_operator)
+                  (name_expression
+                    (module_access
+                      (identifier))))
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (binary_operator)
+                  (expression_list
+                    (name_expression
+                      (module_access
+                        (identifier)))))))))))))
+
+================================================================================
+comparison gaps after qualified names
+================================================================================
+module t::m { fun f() { h(m::a < b, c > (d)); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (arg_list
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (module_identifier)
+                      (identifier)))
+                  (binary_operator)
+                  (name_expression
+                    (module_access
+                      (identifier))))
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (binary_operator)
+                  (expression_list
+                    (name_expression
+                      (module_access
+                        (identifier)))))))))))))
+
+================================================================================
+comparison gaps after dotted names
+================================================================================
+module t::m { fun f(x: X) { h(x.f < b, c > (d)); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (arg_list
+                (binary_expression
+                  (dot_expression
+                    (name_expression
+                      (module_access
+                        (identifier)))
+                    (name_expression
+                      (module_access
+                        (identifier))))
+                  (binary_operator)
+                  (name_expression
+                    (module_access
+                      (identifier))))
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (binary_operator)
+                  (expression_list
+                    (name_expression
+                      (module_access
+                        (identifier)))))))))))))
+
+================================================================================
+adjacent method generic arguments cannot precede a macro bang
+:error
+================================================================================
+module t::m { fun f(x: X) { x.method<T>!(); } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+adjacent generic openers exclude complete comparison and shift tokens
+================================================================================
+module t::m { fun f() { (a<=b, a<<b, vector<=b, vector<<b) } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (expression_list
+            (binary_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (binary_operator)
+              (name_expression
+                (module_access
+                  (identifier))))
+            (binary_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (binary_operator)
+              (name_expression
+                (module_access
+                  (identifier))))
+            (binary_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (binary_operator)
+              (name_expression
+                (module_access
+                  (identifier))))
+            (binary_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (binary_operator)
+              (name_expression
+                (module_access
+                  (identifier))))))))))
+
+================================================================================
+escaped generic identifiers retain their token boundaries
+================================================================================
+module t::m { fun f(x: X) { `if`<T>(); x.`if`<T>(); `vector`<T>(); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)
+                  (type_arguments
+                    (apply_type
+                      (module_access
+                        (identifier))))))
+              (arg_list)))
+          (block_item
+            (dot_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (call_expression
+                (name_expression
+                  (module_access
+                    (identifier)
+                    (type_arguments
+                      (apply_type
+                        (module_access
+                          (identifier))))))
+                (arg_list))))
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)
+                  (type_arguments
+                    (apply_type
+                      (module_access
+                        (identifier))))))
+              (arg_list))))))))
+
+================================================================================
+reserved words cannot become generic method identifiers
+:error
+================================================================================
+module t::m { fun f(x: X) { x.if<u8>(); } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+reserved bool remains a literal before angle operators
+================================================================================
+module t::m { fun f() { true<u8>() } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (binary_expression
+            (binary_expression
+              (bool_literal)
+              (binary_operator)
+              (name_expression
+                (module_access
+                  (identifier))))
+            (binary_operator)
+            (unit_expression)))))))
+
+================================================================================
+long generic identifiers cannot alias short scanner keywords
+================================================================================
+module t::m { fun f(x: X) { vector_identifier_longer_than_buffer<T>(); x.return_identifier_longer_than_buffer<T>(); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)
+                  (type_arguments
+                    (apply_type
+                      (module_access
+                        (identifier))))))
+              (arg_list)))
+          (block_item
+            (dot_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (call_expression
+                (name_expression
+                  (module_access
+                    (identifier)
+                    (type_arguments
+                      (apply_type
+                        (module_access
+                          (identifier))))))
+                (arg_list)))))))))
+
+================================================================================
+type paths allow spaces and comments before generic arguments
+================================================================================
+module t::m { fun f(x: A /* type */ <B>, y: A <B>::C <D>) {} }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)
+                (block_comment)
+                (type_arguments
+                  (apply_type
+                    (module_access
+                      (identifier)))))))
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (module_identifier)
+                (type_arguments
+                  (apply_type
+                    (module_access
+                      (identifier))))
+                (identifier)
+                (type_arguments
+                  (apply_type
+                    (module_access
+                      (identifier))))))))
+        (block)))))
+
+================================================================================
+destructuring constructors allow spaced generic arguments
+================================================================================
+module t::m { fun f(v: S<T>) { let S /* bind */ <T>{x} = v; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)
+                (type_arguments
+                  (apply_type
+                    (module_access
+                      (identifier))))))))
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (bind_unpack
+                  (name_expression
+                    (module_access
+                      (identifier)
+                      (block_comment)
+                      (type_arguments
+                        (apply_type
+                          (module_access
+                            (identifier))))))
+                  (bind_fields
+                    (bind_named_fields
+                      (bind_field
+                        (bind_list
+                          (bind_var
+                            (variable_identifier))))))))
+              (name_expression
+                (module_access
+                  (identifier))))))))))
+
+================================================================================
+casts preserve comparison gaps and adjacent generic types
+================================================================================
+module t::m { fun f(x: X) { h(x as T < U, V > (d)); x as S<T> } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (block
+          (block_item
+            (call_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (arg_list
+                (binary_expression
+                  (cast_expression
+                    (name_expression
+                      (module_access
+                        (identifier)))
+                    (apply_type
+                      (module_access
+                        (identifier))))
+                  (binary_operator)
+                  (name_expression
+                    (module_access
+                      (identifier))))
+                (binary_expression
+                  (name_expression
+                    (module_access
+                      (identifier)))
+                  (binary_operator)
+                  (expression_list
+                    (name_expression
+                      (module_access
+                        (identifier))))))))
+          (cast_expression
+            (name_expression
+              (module_access
+                (identifier)))
+            (apply_type
+              (module_access
+                (identifier)
+                (type_arguments
+                  (apply_type
+                    (module_access
+                      (identifier))))))))))))
+
+================================================================================
+cast names cannot take separated generic arguments
+:error
+================================================================================
+module t::m { fun f(x: X) { x as S <T> } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+macro type arguments allow whitespace after the bang
+================================================================================
+module t::m { fun f(x: X) { foo! /* gap */ <T>(); x.foo! /* gap */ <T>(); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (block
+          (block_item
+            (macro_call_expression
+              (macro_module_access
+                (module_access
+                  (identifier)))
+              (block_comment)
+              (type_arguments
+                (apply_type
+                  (module_access
+                    (identifier))))
+              (arg_list)))
+          (block_item
+            (dot_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (macro_call_expression
+                (macro_module_access
+                  (module_access
+                    (identifier)))
+                (block_comment)
+                (type_arguments
+                  (apply_type
+                    (module_access
+                      (identifier))))
+                (arg_list)))))))))
+
+================================================================================
+contextual vectors retain whitespace tolerant literal lookahead
+================================================================================
+module t::m { fun f(x: X) { vector /* gap */ <T>[]; x.vector<T>(); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (block
+          (block_item
+            (vector_expression
+              (block_comment)
+              (apply_type
+                (module_access
+                  (identifier)))))
+          (block_item
+            (dot_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (call_expression
+                (name_expression
+                  (module_access
+                    (identifier)
+                    (type_arguments
+                      (apply_type
+                        (module_access
+                          (identifier))))))
+                (arg_list)))))))))
+
+================================================================================
+unqualified macro generic arguments must follow the bang
+:error
+================================================================================
+module t::m { fun f() { foo<T>!(); } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+qualified macro generic arguments must follow the bang
+:error
+================================================================================
+module t::m { fun f() { m::foo<T>!(); } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+generic macro path prefixes and global macro paths remain valid
+================================================================================
+module t::m { fun f() { T<X>::foo!<Y>(); ::pkg::m::foo!<T>(); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (macro_call_expression
+              (macro_module_access
+                (module_access
+                  (module_identifier)
+                  (type_arguments
+                    (apply_type
+                      (module_access
+                        (identifier))))
+                  (identifier)))
+              (type_arguments
+                (apply_type
+                  (module_access
+                    (identifier))))
+              (arg_list)))
+          (block_item
+            (macro_call_expression
+              (macro_module_access
+                (module_access
+                  (module_identifier)
+                  (module_identifier)
+                  (identifier)))
+              (type_arguments
+                (apply_type
+                  (module_access
+                    (identifier))))
+              (arg_list))))))))

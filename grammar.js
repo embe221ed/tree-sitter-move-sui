@@ -39,6 +39,19 @@ module.exports = grammar({
   name: 'move',
   extras: $ => [$._whitespace, $.line_comment, $.block_comment, $.newline, $.annotation],
   word: $ => $.identifier,
+  // Inline to keep aliased module identifiers as leaves in the public CST.
+  inline: $ => [$._type_path_identifier],
+  // These are unconditional keywords in the Move compiler's lexer. Reserving
+  // them also in identifier-only positions prevents `fun true()` and `x.if`
+  // from silently parsing. Contextual names (`spec`, `vector`, `entry`, etc.)
+  // remain ordinary identifiers; backtick-escaped keywords are still allowed.
+  reserved: {
+    global: $ => [
+      'abort', 'as', 'break', 'const', 'continue', 'copy', 'else',
+      'false', 'fun', 'friend', 'if', 'let', 'loop', 'module', 'move', 'native',
+      'public', 'return', 'struct', 'true', 'use', 'while',
+    ],
+  },
   // External tokens (src/scanner.c):
   // - _vector_keyword: the contextual `vector` keyword, produced only when the
   //   identifier `vector` is followed by `[` or `<` (mirroring the Move
@@ -46,6 +59,10 @@ module.exports = grammar({
   //   identifier (e.g. `vector::empty()`). It must be a named external (not
   //   the string 'vector') so keyword extraction via the `word` rule cannot
   //   lex it internally and bypass the scanner's lookahead.
+  // - _generic_identifier: a name immediately followed by a single `<`.
+  //   The scanner marks only the name as the token; inspecting the following
+  //   byte here distinguishes expression generics from comparisons even when
+  //   whitespace and comments are named extras.
   // - block_comment: lexed externally because Move block comments nest
   //   (`/* a /* b */ c */`), which a regex token cannot express.
   // - _doc_line_marker / _doc_line_content: `///` doc comments. The content
@@ -61,6 +78,7 @@ module.exports = grammar({
     $._doc_line_content,
     $._doc_line_cont_marker,
     $._doc_block_end,
+    $._generic_identifier,
     $._error_sentinel,
   ],
   supertypes: $ => [
@@ -77,12 +95,13 @@ module.exports = grammar({
     // annotation values vs expressions share module_access
     [$.annotation_expr, $.module_access],
     // binary/cast reshaping across the expression hierarchy
-    [$._expression, $._expression_term],
+    [$._non_lambda_expression, $._expression_term],
     // `|...|` closes or reopens a function type
     [$.function_type_parameters],
     // a lone identifier: path segment vs variable vs module name
-    [$.module_access, $._variable_identifier],
     [$.module_access, $._module_identifier],
+    [$._type_module_access, $._variable_identifier],
+    [$._type_module_access, $._module_identifier],
     // `native` opens either a modifier chain or a native struct
     [$.modifier, $.native_struct_definition],
     // `'label:` vs `break 'label`
@@ -90,7 +109,12 @@ module.exports = grammar({
     // `mut x` as its own bind vs part of a larger one
     [$.mut_bind_var, $._bind],
     // 2-part vs 3-part path prefixes fork here
-    [$.module_access],
+    [$.module_access, $._expression_path_prefix],
+    [$._type_module_access],
+    // a dotted name begins either a field or a method call
+    [$._dot_module_access, $._dot_call_module_access],
+    // [hover] a literal value followed by a global `::` type snippet
+    [$._expression_path_prefix, $._literal_value],
     // `break`/`abort` with or without a trailing expression
     [$.break_expression],
     [$.abort_expression],
@@ -100,12 +124,11 @@ module.exports = grammar({
     [$.address_block, $.primitive_type],
     // [hover] call args vs a finished term followed by a tuple-type snippet
     [$.call_expression, $._expression_term],
-    [$.call_expression, $._dot_access_term],
     // [hover] `forall`/`exists` quantifier vs reserved name before `x: T`
     [$.quantifier_expression, $._reserved_identifier],
     // [hover] qualified-name prefixes vs module identities and access chains
-    [$._hover_path_segment, $._module_identifier],
-    [$._hover_path_segment, $.module_access],
+    [$._hover_path_segment, $._type_module_access],
+    [$._hover_path_segment, $._type_module_access, $._module_identifier],
     // patterns: or-list operands vs parenthesized groups
     [$.bind_list, $._or_bind],
     [$.comma_bind_list, $.paren_bind],
@@ -199,8 +222,9 @@ module.exports = grammar({
     // `pkg::mod::Enum::Variant(u64)` / `pkg::mod::Enum::Variant{ x: u64 }`.
     // Builds its own path (rather than reusing module_access) so the parser
     // can fork between this and a bare type followed by a tuple type; the
-    // dynamic precedence then prefers the variant reading.
-    hover_variant: $ => prec.dynamic(1, seq(
+    // dynamic precedence then prefers the variant reading over splitting
+    // a qualified path into several types, including global `::` types.
+    hover_variant: $ => prec.dynamic(4, seq(
       repeat1($._hover_path_segment),
       field('variant', alias($.identifier, $.variant_identifier)),
       field('fields', $.datatype_fields),
@@ -320,7 +344,7 @@ module.exports = grammar({
     // Annotations
     annotation: $ => seq(
       "#[",
-      sepBy1(",", $.annotation_item),
+      sepBy(",", $.annotation_item),
       "]"
     ),
 
@@ -649,9 +673,23 @@ module.exports = grammar({
       $.function_type,
       $.primitive_type,
     ),
-    apply_type: $ => prec.left(PRECEDENCE.apply_type, seq(
+    // Only a cast's outer name uses expression-style type-argument adjacency.
+    // Parenthesized, reference and function types parse their children normally.
+    _cast_type: $ => choice(
+      alias($._cast_apply_type, $.apply_type),
+      $.ref_type,
+      $.tuple_type,
+      $.function_type,
+      $.primitive_type,
+    ),
+    _cast_apply_type: $ => prec.left(PRECEDENCE.apply_type, seq(
+      optional('::'),
       $.module_access,
-      optional(field('type_arguments', $.type_arguments)),
+    )),
+    // Global address qualification is valid in type positions too.
+    apply_type: $ => prec.left(PRECEDENCE.apply_type, seq(
+      optional('::'),
+      alias($._type_module_access, $.module_access),
     )),
     ref_type: $ => seq(
       $._reference,
@@ -671,37 +709,68 @@ module.exports = grammar({
     ),
     ret_type: $ => seq(':', $._type),
 
-    // Unified name-access chain (the compiler's NameAccessChain model): any
-    // number of `module:`-tagged prefix segments, each optionally carrying
-    // type arguments, ending in a `member:`. `a::b` is module::member,
-    // `a::b::C::D` is module::module::module::member — semantic roles
-    // (module vs enum vs variant) are a naming-convention concern for
-    // queries, exactly as in the compiler's AST. The dynamic precedence
-    // prefers the path/type-arguments reading over `<`/`>` comparisons.
+    // Expression paths use a scanner-classified name before type arguments.
+    // The external token ends at the identifier, so aliases preserve public
+    // node ranges and the following `<` stays inside type_arguments. A name
+    // separated from `<` by whitespace/comments cannot take this branch.
     module_access: $ => choice(
-      // macro variable access
-      seq('$', field('member', $.identifier)),
-      // address access
-      seq('@', field('member', $.identifier)),
-      seq(
-        field('member', alias($._reserved_identifier, $.identifier)),
-        optional(field('type_arguments', $.type_arguments)),
-      ),
-      seq(
+      seq('$', choice(
         field('member', $.identifier),
-        optional(field('type_arguments', $.type_arguments)),
-      ),
+        seq(field('member', alias($._generic_identifier, $.identifier)),
+            field('type_arguments', $.type_arguments)),
+      )),
+      seq('@', field('address', $._named_address_identifier)),
+      field('member', alias($._reserved_identifier, $.identifier)),
+      field('member', $.identifier),
+      seq(field('member', alias($._generic_identifier, $.identifier)),
+          field('type_arguments', $.type_arguments)),
+      prec.dynamic(1, seq(
+        repeat1($._expression_path_prefix),
+        choice(
+          field('member', $.identifier),
+          seq(field('member', alias($._generic_identifier, $.identifier)),
+              field('type_arguments', $.type_arguments)),
+        ),
+      )),
+    ),
+    _expression_path_prefix: $ => choice(
+      seq(field('module', $.num_literal), '::'),
+      seq(field('module', $._module_identifier), '::'),
+      seq(field('module', alias($._generic_identifier, $.module_identifier)),
+          field('type_arguments', $.type_arguments), '::'),
+    ),
+    // A macro's final name takes its generic arguments after `!`. Earlier
+    // path segments may still carry adjacent type arguments.
+    _macro_path_access: $ => choice(
+      seq('$', field('member', $.identifier)),
+      field('member', alias($._reserved_identifier, $.identifier)),
+      field('member', $.identifier),
+      prec.dynamic(1, seq(
+        repeat1($._expression_path_prefix),
+        field('member', $.identifier),
+      )),
+    ),
+    _named_address_identifier: $ => field('member', $.identifier),
+    // Types and destructuring bindings allow spaces before type arguments.
+    // Both path variants expose the same module_access CST. Accept the external
+    // name too because types can share lexer states with expression paths.
+    _type_path_identifier: $ => choice(
+      $.identifier,
+      alias($._generic_identifier, $.identifier),
+      alias($._reserved_identifier, $.identifier),
+    ),
+    _type_module_access: $ => choice(
+      seq(optional('$'), field('member', $._type_path_identifier),
+          optional(field('type_arguments', $.type_arguments))),
       prec.dynamic(1, seq(
         repeat1(choice(
-          // a leading numeric address takes no type arguments
           seq(field('module', $.num_literal), '::'),
-          seq(
-            field('module', $._module_identifier),
-            optional(field('type_arguments', $.type_arguments)),
-            '::',
-          ),
+          seq(field('module', choice($._module_identifier,
+                alias($._generic_identifier, $.module_identifier),
+                alias($._reserved_identifier, $.module_identifier))),
+              optional(field('type_arguments', $.type_arguments)), '::'),
         )),
-        field('member', $.identifier),
+        field('member', $._type_path_identifier),
         optional(field('type_arguments', $.type_arguments)),
       )),
     ),
@@ -713,7 +782,11 @@ module.exports = grammar({
       seq(field('fully_qualified_module', $.module_identity), '::', field('member', $.identifier)),
     ),
 
-    macro_module_access: $ => seq(field("access", $.module_access), "!"),
+    macro_module_access: $ => seq(
+      optional('::'),
+      field('access', alias($._macro_path_access, $.module_access)),
+      '!',
+    ),
 
     module_identity: $ =>
       seq(
@@ -722,13 +795,9 @@ module.exports = grammar({
         field('module', $._module_identifier)
       ),
 
-    // KNOWN DIVERGENCE (backlog P6): the compiler only reads `<` as type
-    // arguments in expression position when it is ADJACENT to the name, so
-    // `h(a < b, c > (d))` is two comparisons. token.immediate cannot express
-    // this here because whitespace is an extras token (once the whitespace
-    // token is shifted, `<` is "immediate" again); the fix would need the
-    // scanner to own whitespace and track adjacency state. See
-    // test/corpus/known_failures.txt.
+    // Adjacency belongs to the preceding expression name, not this opening
+    // token. Macro bangs and type positions intentionally allow intervening
+    // whitespace and comments, as the compiler does.
     type_arguments: $ => seq(
       '<',
       sepBy1(',', $._type),
@@ -800,10 +869,14 @@ module.exports = grammar({
 
     // Expression
 
-    _expression: $ => choice(
+    // Lambdas are parsed only at an expression's beginning. Binary operands
+    // and return's optional value start with a term, so a leading `|` after
+    // return is an operator; returning a lambda requires parentheses.
+    _expression: $ => choice($.lambda_expression, $._non_lambda_expression),
+
+    _non_lambda_expression: $ => choice(
       $.call_expression,
       $.macro_call_expression,
-      $.lambda_expression,
       $.if_expression,
       $.while_expression,
       $.return_expression,
@@ -904,12 +977,13 @@ module.exports = grammar({
       prec(PRECEDENCE.block_tail, seq('loop', field('body', $.block))),
     ),
 
-    // return expression
+    // A bare return is also a term (`return.x()` / `return + 1`). Its value
+    // excludes a leading lambda, matching the compiler's at_start_of_exp.
     return_expression: $ => choice(
       prec.left(seq(
         'return',
         optional(field('label', $.label)),
-        field('return', $._expression)
+        field('return', $._non_lambda_expression)
       )),
       prec(PRECEDENCE.block_tail, seq(
         'return',
@@ -1006,9 +1080,9 @@ module.exports = grammar({
 
       let binary_expression = choice(...table.map(
         ([precedence, operator]) => prec.left(precedence, seq(
-          field('lhs', $._expression),
+          field('lhs', $._non_lambda_expression),
           field('operator', alias(operator, $.binary_operator)),
-          field('rhs', $._expression),
+          field('rhs', $._non_lambda_expression),
         ))
       ));
 
@@ -1030,7 +1104,6 @@ module.exports = grammar({
       $._unary_expression,
       $.while_expression,
       $.loop_expression,
-      $.return_expression,
       $.abort_expression,
       $.identified_expression,
     ),
@@ -1062,6 +1135,7 @@ module.exports = grammar({
     ),
 
     _expression_term: $ => choice(
+      $.return_expression,
       $.call_expression,
       $.break_expression,
       $.continue_expression,
@@ -1106,9 +1180,9 @@ module.exports = grammar({
     expression_list: $ => seq('(', sepBy1(',', $._expression), ')'),
     unit_expression: $ => seq('(', ')'),
     cast_expression: $ => prec.left(PRECEDENCE.as, seq(
-      field('expr', $._expression),
+      field('expr', $._non_lambda_expression),
       'as',
-      field('ty', $._type),
+      field('ty', $._cast_type),
     )),
     annotation_expression: $ => seq(
       '(',
@@ -1130,23 +1204,45 @@ module.exports = grammar({
     // as in the compiler's parse_dot_or_index_chain, so `a.b[0]` is
     // `(a.b)[0]`.
     _dot_access_term: $ => choice(
-      $.call_expression,
-      $.break_expression,
-      $.continue_expression,
-      $.name_expression,
-      $.macro_call_expression,
-      $.pack_expression,
-      $._literal_value,
-      $.unit_expression,
-      $.expression_list,
-      $.annotation_expression,
-      $.block,
-      $.spec_block,
-      $.if_expression,
-      $.match_expression,
-      // positional field access `s.0` — the compiler only allows an
-      // identifier or a field index after `.`
-      alias(token(/\d+/), $.anon_field_index),
+      alias($._dot_call_expression, $.call_expression),
+      alias($._dot_name_expression, $.name_expression),
+      alias($._dot_macro_call_expression, $.macro_call_expression),
+      // Positional field indices are decimal, including digit separators.
+      alias(token(/[0-9][0-9_]*/), $.anon_field_index),
+    ),
+    // Keep node shapes shared with ordinary calls, but distinguish dotted
+    // identifiers with a property field so standard locals queries can exclude
+    // them. Only one field/method name follows a dot, never a qualified path.
+    // Fields and macro names take no type arguments here. For macros, type
+    // arguments follow the bang; regular methods take them before `(`.
+    // Hidden reductions retain the inherited member field as well as property.
+    // Directly nested field() calls would discard the inner member field.
+    _property_identifier: $ => field('member', $.identifier),
+    _generic_property_identifier: $ => field('member', alias($._generic_identifier, $.identifier)),
+    _dot_module_access: $ => field('property', $._property_identifier),
+    _dot_name_expression: $ => seq(
+      field('access', alias($._dot_module_access, $.module_access)),
+    ),
+    _dot_call_module_access: $ => choice(
+      field('property', $._property_identifier),
+      seq(field('property', $._generic_property_identifier),
+          field('type_arguments', $.type_arguments)),
+    ),
+    _dot_call_name_expression: $ => seq(
+      field('access', alias($._dot_call_module_access, $.module_access)),
+    ),
+    _dot_call_expression: $ => prec.dynamic(1, seq(
+      alias($._dot_call_name_expression, $.name_expression),
+      field('args', $.arg_list),
+    )),
+    _dot_macro_module_access: $ => seq(
+      field('access', alias($._dot_module_access, $.module_access)),
+      '!',
+    ),
+    _dot_macro_call_expression: $ => seq(
+      field('access', alias($._dot_macro_module_access, $.macro_module_access)),
+      optional(field('type_arguments', $.type_arguments)),
+      field('args', $.arg_list),
     ),
     index_expression: $ => prec.left(PRECEDENCE.call, seq(
       field('expr',
@@ -1200,8 +1296,13 @@ module.exports = grammar({
       $.at_bind,
       $._literal_value,
     ),
+    // Binding constructors permit spaced type arguments, unlike expressions.
+    _bind_name_expression: $ => seq(
+      optional('::'),
+      field('access', alias($._type_module_access, $.module_access)),
+    ),
     bind_unpack: $ => seq(
-      $.name_expression,
+      alias($._bind_name_expression, $.name_expression),
       optional(field('bind_fields', $.bind_fields)),
     ),
     bind_fields: $ => choice(
@@ -1248,7 +1349,8 @@ module.exports = grammar({
     // underscores are legal anywhere in the digits, including right after 0x
     address_literal: $ => /@(0x[a-fA-F0-9_]+|[0-9][0-9_]*)/,
     bool_literal: $ => choice('true', 'false'),
-    num_literal: $ => prec.right(seq(
+    // The suffix belongs to the same lexer token: `42 u8` is not a literal.
+    num_literal: $ => token(seq(
       choice(
         /[0-9][0-9_]*/,
         /0x[a-fA-F0-9_]+/
@@ -1272,11 +1374,15 @@ module.exports = grammar({
     _enum_identifier: $ => alias($.identifier, $.enum_identifier),
     _variant_identifier: $ => alias($.identifier, $.variant_identifier),
     _function_identifier: $ => alias($.identifier, $.function_identifier),
-    _variable_identifier: $ => alias($.identifier, $.variable_identifier),
+    _variable_identifier: $ => choice(
+      alias($.identifier, $.variable_identifier),
+      alias($._reserved_identifier, $.variable_identifier),
+    ),
     _field_identifier: $ => alias($.identifier, $.field_identifier),
     _type_identifier: $ => alias($.identifier, $.type_identifier),
     _type_parameter_identifier: $ => alias($.identifier, $.type_parameter_identifier),
-    identifier: $ => /(`)?[a-zA-Z_][0-9a-zA-Z_]*(`)?/,
+    // Restricted identifiers require both backticks, exactly as in the compiler.
+    identifier: $ => /[a-zA-Z_][0-9a-zA-Z_]*|`[a-zA-Z_][0-9a-zA-Z_]*`/,
     macro_identifier: $ => /[a-zA-Z_][0-9a-zA-Z_]*!/,
     _reserved_identifier: $ => choice($._forall, $._exists, 'spec'),
 

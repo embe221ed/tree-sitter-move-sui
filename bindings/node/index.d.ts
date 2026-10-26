@@ -9,6 +9,8 @@ type ChildNode = {
   types: BaseNode[];
 };
 
+// Match the supported node-tree-sitter peer's public Language type so this
+// object can be passed directly to Parser.setLanguage in TypeScript.
 type NodeInfo =
   | (BaseNode & {
       subtypes: BaseNode[];

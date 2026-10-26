@@ -73,3 +73,17 @@ module t::m { #[expected_failure(abort_code = a::m::ENotFound)] fun f() {} }
         (function_identifier)
         (function_parameters)
         (block)))))
+
+================================================================================
+empty annotation list
+================================================================================
+#[] module t::m {}
+--------------------------------------------------------------------------------
+
+(source_file
+  (annotation)
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body)))

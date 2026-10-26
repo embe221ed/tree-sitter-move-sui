@@ -165,3 +165,41 @@ module t::m { fun f() { 'a: while (true) { continue 'a } } }
                 (continue_expression
                   (label
                     (identifier)))))))))))
+
+================================================================================
+contextual names are variable bindings
+================================================================================
+module t::m { fun f() { let (spec, forall, exists) = values; |spec| spec } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (let_statement
+              (bind_list
+                (comma_bind_list
+                  (bind_var
+                    (variable_identifier))
+                  (bind_var
+                    (variable_identifier))
+                  (bind_var
+                    (variable_identifier))))
+              (name_expression
+                (module_access
+                  (identifier)))))
+          (lambda_expression
+            (lambda_bindings
+              (lambda_binding
+                (bind_var
+                  (variable_identifier))))
+            (name_expression
+              (module_access
+                (identifier)))))))))

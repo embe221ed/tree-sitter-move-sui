@@ -820,3 +820,201 @@ module t::m { fun f(): u64 { let x = return { 1 } + 2; abort { 3 } + 4 } }
                 (num_literal)))
             (binary_operator)
             (num_literal)))))))
+
+================================================================================
+bare returns participate in dot and binary expressions
+================================================================================
+module t::m { fun f(x: u64) { return.x(); return >> 0; return | 0; return || false; return x + 1; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (block
+          (block_item
+            (dot_expression
+              (return_expression)
+              (call_expression
+                (name_expression
+                  (module_access
+                    (identifier)))
+                (arg_list))))
+          (block_item
+            (binary_expression
+              (return_expression)
+              (binary_operator)
+              (num_literal)))
+          (block_item
+            (binary_expression
+              (return_expression)
+              (binary_operator)
+              (num_literal)))
+          (block_item
+            (binary_expression
+              (return_expression)
+              (binary_operator)
+              (bool_literal)))
+          (block_item
+            (return_expression
+              (binary_expression
+                (name_expression
+                  (module_access
+                    (identifier)))
+                (binary_operator)
+                (num_literal)))))))))
+
+================================================================================
+return retains borrowed and other prefix operands
+================================================================================
+module t::m { fun f(x: X, r: &u64, b: bool) { return &x; return &mut x; return *r; return !b; return copy x; return move x; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier))))
+          (function_parameter
+            (variable_identifier)
+            (ref_type
+              (imm_ref)
+              (primitive_type)))
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (block
+          (block_item
+            (return_expression
+              (borrow_expression
+                (imm_ref)
+                (name_expression
+                  (module_access
+                    (identifier))))))
+          (block_item
+            (return_expression
+              (borrow_expression
+                (mut_ref)
+                (name_expression
+                  (module_access
+                    (identifier))))))
+          (block_item
+            (return_expression
+              (dereference_expression
+                (name_expression
+                  (module_access
+                    (identifier))))))
+          (block_item
+            (return_expression
+              (unary_expression
+                (unary_op)
+                (name_expression
+                  (module_access
+                    (identifier))))))
+          (block_item
+            (return_expression
+              (move_or_copy_expression
+                (name_expression
+                  (module_access
+                    (identifier))))))
+          (block_item
+            (return_expression
+              (move_or_copy_expression
+                (name_expression
+                  (module_access
+                    (identifier)))))))))))
+
+================================================================================
+return accepts parenthesized lambdas and tuples
+================================================================================
+module t::m { fun f() { return (|x| x); return (|| 1); return (1, 2); } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters)
+        (block
+          (block_item
+            (return_expression
+              (expression_list
+                (lambda_expression
+                  (lambda_bindings
+                    (lambda_binding
+                      (bind_var
+                        (variable_identifier))))
+                  (name_expression
+                    (module_access
+                      (identifier)))))))
+          (block_item
+            (return_expression
+              (expression_list
+                (lambda_expression
+                  (lambda_bindings)
+                  (num_literal)))))
+          (block_item
+            (return_expression
+              (expression_list
+                (num_literal)
+                (num_literal)))))))))
+
+================================================================================
+return pipe tokens are operators unless a lambda is parenthesized
+================================================================================
+module t::m { fun f(x: u64) { return |x| x; return || x; } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (primitive_type)))
+        (block
+          (block_item
+            (binary_expression
+              (binary_expression
+                (return_expression)
+                (binary_operator)
+                (name_expression
+                  (module_access
+                    (identifier))))
+              (binary_operator)
+              (name_expression
+                (module_access
+                  (identifier)))))
+          (block_item
+            (binary_expression
+              (return_expression)
+              (binary_operator)
+              (name_expression
+                (module_access
+                  (identifier))))))))))

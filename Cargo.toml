@@ -12,6 +12,7 @@ build = "bindings/rust/build.rs"
 include = [
   "bindings/rust/*",
   "grammar.js",
+  "tree-sitter.json",
   "queries/*",
   "src/*",
   "src/tree_sitter/*",
@@ -32,4 +33,5 @@ cc = "1"
 [dev-dependencies]
 # Track the CLI pinned in package.json: some scanner invariants (zero-width
 # tokens) only surface on a runtime of the same generation as the generator.
-tree-sitter = "0.26"
+tree-sitter = "=0.27.1"
+tree-sitter-highlight = "=0.27.1"

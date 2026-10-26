@@ -3,6 +3,9 @@
 (struct_definition
     name: (struct_identifier) @name) @definition.class
 
+(native_struct_definition
+    name: (struct_identifier) @name) @definition.class
+
 (enum_definition
     name: (enum_identifier) @name) @definition.class
 
@@ -23,7 +26,7 @@
     name: (constant_identifier) @name) @definition.constant
 
 (module_definition
-    module_identity: (module_identity) @name) @definition.module
+    module_identity: [(module_identity) (module_identifier)] @name) @definition.module
 
 ; references
 

@@ -302,3 +302,69 @@ module t::m { fun deep(): Wrapper<Inner<Deep<u8>>> { make<Wrapper<Inner<Deep<u8>
                                   (type_arguments
                                     (primitive_type)))))))))))))
             (arg_list)))))))
+
+================================================================================
+global type paths work in signatures and nested arguments
+================================================================================
+module t::m { fun f(x: &::std::option::Option<::sui::object::ID>): ::std::option::Option<u64> { ::std::option::none<u64>() } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (ref_type
+              (imm_ref)
+              (apply_type
+                (module_access
+                  (module_identifier)
+                  (module_identifier)
+                  (identifier)
+                  (type_arguments
+                    (apply_type
+                      (module_access
+                        (module_identifier)
+                        (module_identifier)
+                        (identifier)))))))))
+        (ret_type
+          (apply_type
+            (module_access
+              (module_identifier)
+              (module_identifier)
+              (identifier)
+              (type_arguments
+                (primitive_type)))))
+        (block
+          (call_expression
+            (name_expression
+              (module_access
+                (module_identifier)
+                (module_identifier)
+                (identifier)
+                (type_arguments
+                  (primitive_type))))
+            (arg_list)))))))
+
+================================================================================
+global type paths in hover snippets
+================================================================================
+&::std::option::Option<u64>
+--------------------------------------------------------------------------------
+
+(source_file
+  (ref_type
+    (imm_ref)
+    (apply_type
+      (module_access
+        (module_identifier)
+        (module_identifier)
+        (identifier)
+        (type_arguments
+          (primitive_type))))))

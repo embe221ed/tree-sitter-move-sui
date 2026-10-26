@@ -3,3 +3,4 @@ build
 *.log
 target
 parser.so
+__pycache__/

@@ -1,0 +1,226 @@
+================================================================================
+dot access cannot target a block
+:error
+================================================================================
+module t::m { fun f(x: X) { x.{}; } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+dot access cannot target a byte string
+:error
+================================================================================
+module t::m { fun f(x: X) { x.b"hello"; } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+dot access cannot target a boolean literal
+:error
+================================================================================
+module t::m { fun f(x: X) { x.true; } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+dot access cannot target a parenthesized expression
+:error
+================================================================================
+module t::m { fun f(x: X) { x.(y); } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+dot access cannot target a qualified path
+:error
+================================================================================
+module t::m { fun f(x: X) { x.m::f(); } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+dot access cannot target an address
+:error
+================================================================================
+module t::m { fun f(x: X) { x.@0x1; } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+dot access cannot target control flow
+:error
+================================================================================
+module t::m { fun f(x: X) { x.if (true) {} else {}; } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+dotted calls preserve generic macro and index chains
+================================================================================
+module t::m { fun f(x: X) { x.`if`<u64>(1).vector[0].map!<u64>(|v| v); x.0_1 } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (block
+          (block_item
+            (dot_expression
+              (index_expression
+                (dot_expression
+                  (dot_expression
+                    (name_expression
+                      (module_access
+                        (identifier)))
+                    (call_expression
+                      (name_expression
+                        (module_access
+                          (identifier)
+                          (type_arguments
+                            (primitive_type))))
+                      (arg_list
+                        (num_literal))))
+                  (name_expression
+                    (module_access
+                      (identifier))))
+                (num_literal))
+              (macro_call_expression
+                (macro_module_access
+                  (module_access
+                    (identifier)))
+                (type_arguments
+                  (primitive_type))
+                (arg_list
+                  (lambda_expression
+                    (lambda_bindings
+                      (lambda_binding
+                        (bind_var
+                          (variable_identifier))))
+                    (name_expression
+                      (module_access
+                        (identifier))))))))
+          (dot_expression
+            (name_expression
+              (module_access
+                (identifier)))
+            (anon_field_index)))))))
+
+================================================================================
+dot field cannot take type arguments without a call
+:error
+================================================================================
+module t::m { fun f(x: X) { x.field<T>; } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+dot macro multiple type arguments must follow the bang
+:error
+================================================================================
+module t::m { fun f(x: X) { x.method<T, U>!(); } }
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+generic dot methods and macros keep distinct argument positions
+================================================================================
+module t::m { fun f(x: X) { x.method<A<B>, C<D>>(1); x.method!<A<B>, C<D>>(1); x.field < 3 } }
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_definition
+    (module_identity
+      (module_identifier)
+      (module_identifier))
+    (module_body
+      (function_definition
+        (function_identifier)
+        (function_parameters
+          (function_parameter
+            (variable_identifier)
+            (apply_type
+              (module_access
+                (identifier)))))
+        (block
+          (block_item
+            (dot_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (call_expression
+                (name_expression
+                  (module_access
+                    (identifier)
+                    (type_arguments
+                      (apply_type
+                        (module_access
+                          (identifier)
+                          (type_arguments
+                            (apply_type
+                              (module_access
+                                (identifier))))))
+                      (apply_type
+                        (module_access
+                          (identifier)
+                          (type_arguments
+                            (apply_type
+                              (module_access
+                                (identifier)))))))))
+                (arg_list
+                  (num_literal)))))
+          (block_item
+            (dot_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (macro_call_expression
+                (macro_module_access
+                  (module_access
+                    (identifier)))
+                (type_arguments
+                  (apply_type
+                    (module_access
+                      (identifier)
+                      (type_arguments
+                        (apply_type
+                          (module_access
+                            (identifier))))))
+                  (apply_type
+                    (module_access
+                      (identifier)
+                      (type_arguments
+                        (apply_type
+                          (module_access
+                            (identifier)))))))
+                (arg_list
+                  (num_literal)))))
+          (binary_expression
+            (dot_expression
+              (name_expression
+                (module_access
+                  (identifier)))
+              (name_expression
+                (module_access
+                  (identifier))))
+            (binary_operator)
+            (num_literal)))))))

@@ -2,8 +2,8 @@
 # Copyright (c) The Move Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-set -e
-shopt -s globstar
+set -euo pipefail
+shopt -s globstar nullglob
 cd "$(dirname "$0")"
 
 # The CLI version matters: `tree-sitter generate` rewrites src/parser.c,
@@ -13,30 +13,34 @@ cd "$(dirname "$0")"
 # Debian's tree-sitter-cli is 0.20.8 — so never trust a bare `tree-sitter` off
 # PATH. Resolve the version pinned in package.json instead, installing it on
 # first run.
-TS_MIN_MAJOR_MINOR="0.26"
+TS_VERSION=$(node -p 'require("./package.json").devDependencies["tree-sitter-cli"]')
 TS=node_modules/.bin/tree-sitter
 
 if [ ! -x "$TS" ]; then
-    echo "tree-sitter-cli not installed locally, running npm install..."
-    npm install --no-audit --no-fund
+    echo "tree-sitter-cli not installed locally, running npm ci..."
+    npm ci --no-audit --no-fund
 fi
 
 ts_version=$("$TS" --version | awk '{print $2}')
-case "$ts_version" in
-    "$TS_MIN_MAJOR_MINOR".*) ;;
-    *)
-        echo "FAILED: expected tree-sitter-cli $TS_MIN_MAJOR_MINOR.x, got $ts_version"
-        echo "Run 'npm install' to get the version pinned in package.json."
-        exit 1
-        ;;
-esac
+if [ "$ts_version" != "$TS_VERSION" ]; then
+    echo "FAILED: expected tree-sitter-cli $TS_VERSION, got $ts_version"
+    echo "Run 'npm ci' to get the version pinned in package.json."
+    exit 1
+fi
 
 # When this repo lives inside the Sui monorepo layout, also sweep the
 # framework sources; standalone checkouts skip that part.
-SUI_FRAMEWORK_ROOT="../../../../crates/sui-framework/packages"
+if [ "${SUI_FRAMEWORK_ROOT+x}" = x ] && [ ! -d "$SUI_FRAMEWORK_ROOT" ]; then
+    echo "FAILED: SUI_FRAMEWORK_ROOT is not a directory: $SUI_FRAMEWORK_ROOT" >&2
+    exit 1
+fi
+SUI_FRAMEWORK_ROOT=${SUI_FRAMEWORK_ROOT:-../../../../crates/sui-framework/packages}
+
+# Verify the runner itself catches failures, including stderr-only CLI errors.
+python3 -m unittest discover -s test/tooling -p 'test_*.py'
 
 # Fail on stale conflict declarations (generate warns about them).
-gen_out=$("$TS" generate 2>&1) || { echo "$gen_out"; exit 1; }
+gen_out=$("$TS" generate --abi 15 2>&1) || { echo "$gen_out"; exit 1; }
 if echo "$gen_out" | grep -q "unnecessary conflicts"; then
     echo "$gen_out"
     echo "FAILED: grammar.js declares unnecessary conflicts"
@@ -57,26 +61,54 @@ fi
 # Highlight assertion tests (test/highlights).
 python3 test/highlights/check.py
 
+# Rebuild the native Node addon after regeneration, then verify the public binding.
+npm run test:node
+npm run test:types
+
 # Scanner invariants that only surface on a modern tree-sitter runtime (the
 # rust dev-dependency tracks the CLI), so `tree-sitter test` cannot express
 # them — a zero-width token is invisible to an older runtime.
 if command -v cargo >/dev/null 2>&1; then
-    cargo test --quiet
+    cargo test --locked --quiet
 else
     echo "SKIP: cargo not found, skipping runtime invariant tests"
 fi
 
-# `parse -q` only prints files whose parse contains errors, so any output here
-# is a failure.
+# `parse -q` reports parse errors on stdout, but loader/compiler failures can
+# report only on stderr. Preserve diagnostics and check both status and output.
 sweep=(tests/*.move)
-if [ -d "$SUI_FRAMEWORK_ROOT" ]; then
-    sweep+=("$SUI_FRAMEWORK_ROOT"/sui-framework/**/*.move)
-    sweep+=("$SUI_FRAMEWORK_ROOT"/move-stdlib/**/*.move)
+if [ ${#sweep[@]} -eq 0 ]; then
+    echo "FAILED: no local Move fixtures found" >&2
+    exit 1
 fi
-failures=$("$TS" parse -q "${sweep[@]}" 2>/dev/null || true)
+if [ -d "$SUI_FRAMEWORK_ROOT" ]; then
+    for package in sui-framework move-stdlib; do
+        framework_files=("$SUI_FRAMEWORK_ROOT"/"$package"/**/*.move)
+        if [ ${#framework_files[@]} -eq 0 ]; then
+            echo "FAILED: no Move files found in $SUI_FRAMEWORK_ROOT/$package" >&2
+            exit 1
+        fi
+        sweep+=("${framework_files[@]}")
+    done
+    # Include other checked-out framework packages (for example sui-system,
+    # bridge and deepbook) without requiring them in a partial checkout.
+    for package_dir in "$SUI_FRAMEWORK_ROOT"/*/; do
+        case "${package_dir%/}" in
+            */sui-framework|*/move-stdlib) continue ;;
+        esac
+        sweep+=("$package_dir"**/*.move)
+    done
+fi
+if failures=$("$TS" parse -q "${sweep[@]}"); then
+    :
+else
+    printf '%s\n' "$failures"
+    echo "FAILED: parse sweep failed" >&2
+    exit 1
+fi
 if [ -n "$failures" ]; then
     echo "$failures"
     echo "FAILED: some files did not parse cleanly"
     exit 1
 fi
-echo "OK: all files parsed cleanly"
+echo "OK: all ${#sweep[@]} files parsed cleanly"

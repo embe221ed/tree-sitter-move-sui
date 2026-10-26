@@ -12,10 +12,16 @@
 //   (`vector::empty()`, `use std::vector`, ...) it is an ordinary identifier,
 //   which the internal lexer handles.
 //
+// - Names immediately followed by a single `<`, for expression type
+//   arguments. This is stateless lookahead: whitespace and comments following
+//   the name remain visible to their own tokens, and incremental parsing can
+//   invalidate the name when the adjacency changes.
+//
 // - Block comments, which nest in Move (`/* a /* b */ c */`) and therefore
 //   cannot be a regex token.
 
 #include "tree_sitter/parser.h"
+#include <string.h>
 
 enum TokenType {
   VECTOR_KEYWORD,
@@ -24,6 +30,7 @@ enum TokenType {
   DOC_LINE_CONTENT,
   DOC_LINE_CONT_MARKER,
   DOC_BLOCK_END,
+  GENERIC_IDENTIFIER,
   ERROR_SENTINEL,
 };
 
@@ -44,9 +51,27 @@ void tree_sitter_move_external_scanner_deserialize(void *payload, const char *bu
   (void)length;
 }
 
+static inline bool is_ident_start(int32_t c) {
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+}
+
 static inline bool is_ident_char(int32_t c) {
-  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
-         c == '_';
+  return is_ident_start(c) || (c >= '0' && c <= '9');
+}
+
+// External tokens bypass Tree-sitter's internal reserved-word lexer. Keep
+// this list aligned with grammar.js's global reserved set; escaped names
+// are intentionally exempt.
+static bool is_reserved_word(const char *name) {
+  static const char *const words[] = {
+    "abort", "as", "break", "const", "continue", "copy", "else", "false",
+    "fun", "friend", "if", "let", "loop", "module", "move", "native",
+    "public", "return", "struct", "true", "use", "while",
+  };
+  for (unsigned i = 0; i < sizeof(words) / sizeof(words[0]); i++) {
+    if (strcmp(name, words[i]) == 0) return true;
+  }
+  return false;
 }
 
 static inline bool is_space(int32_t c) {
@@ -181,29 +206,42 @@ bool tree_sitter_move_external_scanner_scan(void *payload, TSLexer *lexer,
     return false;
   }
 
-  if (!valid_symbols[VECTOR_KEYWORD]) {
+  if (!valid_symbols[VECTOR_KEYWORD] &&
+      (!valid_symbols[GENERIC_IDENTIFIER] || in_error_recovery)) {
     return false;
   }
 
-  // Leading whitespace/comments are left to the `extras` rules (the newline
-  // tokens matter to consumers like prettier-move); the scanner is re-invoked
-  // once they have been consumed.
-  static const char word[] = "vector";
-  for (const char *c = word; *c != '\0'; c++) {
-    if (lexer->lookahead != *c) {
-      return false;
-    }
+  // Do not skip extras here: their public ranges must remain intact.
+  bool escaped = lexer->lookahead == '`';
+  if (escaped) lexer->advance(lexer, false);
+  if (!is_ident_start(lexer->lookahead)) {
+    return false;
+  }
+  // Only short contextual/reserved words need their spelling retained. A
+  // longer identifier is still consumed fully and can never equal one of them.
+  char name[16] = {0};
+  unsigned length = 0;
+  while (is_ident_char(lexer->lookahead)) {
+    if (length < sizeof(name) - 1) name[length++] = (char)lexer->lookahead;
     lexer->advance(lexer, false);
   }
-
-  // `vectorish`, `vector_foo`, etc. are ordinary identifiers.
-  if (is_ident_char(lexer->lookahead)) {
-    return false;
+  if (escaped) {
+    if (lexer->lookahead != '`') return false;
+    lexer->advance(lexer, false);
   }
-
-  // The token is just the word `vector`; everything past this point is
-  // lookahead used to decide whether to emit it.
   lexer->mark_end(lexer);
+  bool vector = !escaped && strcmp(name, "vector") == 0;
+  if (!vector || !valid_symbols[VECTOR_KEYWORD]) {
+    if (!valid_symbols[GENERIC_IDENTIFIER] || in_error_recovery || lexer->lookahead != '<') {
+      return false;
+    }
+    if (!escaped && is_reserved_word(name)) return false;
+    // `<=` and `<<` are complete operators, not generic argument openers.
+    lexer->advance(lexer, false);
+    if (lexer->lookahead == '=' || lexer->lookahead == '<') return false;
+    lexer->result_symbol = GENERIC_IDENTIFIER;
+    return true;
+  }
 
   // The compiler's lookahead works on tokens, so any mix of whitespace and
   // comments may sit between `vector` and the deciding `[`/`<`.

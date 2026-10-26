@@ -1,7 +1,7 @@
 const root = require("path").join(__dirname, "..", "..");
 
 module.exports =
-  typeof process.versions.bun === "string"
+  typeof process.versions.bun === "string" && Bun.isStandaloneExecutable
     // Support `bun build --compile` by being statically analyzable enough to
     // find the .node file at build-time
     ? require(`../../prebuilds/${process.platform}-${process.arch}/tree-sitter-move.node`)
